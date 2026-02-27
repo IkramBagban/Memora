@@ -1,68 +1,190 @@
+import { Alert } from 'react-native';
 import { create } from 'zustand';
-import type { Todo, Priority } from '@memora/shared';
-import { addDays, subDays } from 'date-fns';
+import { isBefore, isToday, startOfDay } from 'date-fns';
+import type { CreateTodoPayload, Priority, Todo, UpdateTodoPayload } from '@memora/shared';
+import { cancelReminderNotification, scheduleReminderNotification } from '@/hooks/use-notifications';
+import { todoService } from '@/services/todo.service';
+
+export type TodoTabFilter = 'all' | 'today' | 'high_priority';
+
+interface GroupedTodos {
+  overdue: Todo[];
+  today: Todo[];
+  upcoming: Todo[];
+}
 
 interface TodoStore {
   todos: Todo[];
   isLoading: boolean;
-  filter: 'all' | 'today' | 'high_priority';
-  toggleComplete: (id: string) => void;
-  setFilter: (filter: 'all' | 'today' | 'high_priority') => void;
+  filter: TodoTabFilter;
+  notificationIds: Record<string, string>;
+  setFilter: (filter: TodoTabFilter) => void;
+  fetchTodos: () => Promise<void>;
+  createTodo: (payload: CreateTodoPayload) => Promise<void>;
+  updateTodo: (payload: UpdateTodoPayload) => Promise<void>;
+  deleteTodo: (id: string) => Promise<void>;
+  toggleComplete: (todo: Todo) => Promise<void>;
+  getGroupedTodos: () => GroupedTodos;
 }
 
-export const useTodoStore = create<TodoStore>((set) => ({
-  todos: [
-    {
-      id: '1',
-      user_id: 'user1',
-      title: 'Review PR for landing page',
-      description: 'Check mobile responsiveness',
-      is_completed: false,
-      priority: 'high',
-      due_date: new Date().toISOString().split('T')[0],
-      reminder_at: null,
-      reminder_channel: null,
-      reminder_sent: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '2',
-      user_id: 'user1',
-      title: 'Renew domain name',
-      description: null,
-      is_completed: false,
-      priority: 'medium',
-      due_date: addDays(new Date(), 2).toISOString().split('T')[0],
-      reminder_at: null,
-      reminder_channel: null,
-      reminder_sent: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '3',
-      user_id: 'user1',
-      title: 'Email accountant',
-      description: 'Send Q3 reports',
-      is_completed: false,
-      priority: 'high',
-      due_date: subDays(new Date(), 1).toISOString().split('T')[0],
-      reminder_at: null,
-      reminder_channel: null,
-      reminder_sent: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-  ],
+const sortByDueDate = (a: Todo, b: Todo): number => {
+  if (!a.due_date && !b.due_date) return 0;
+  if (!a.due_date) return 1;
+  if (!b.due_date) return -1;
+  return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+};
+
+export const useTodoStore = create<TodoStore>((set, get) => ({
+  todos: [],
   isLoading: false,
   filter: 'all',
-  
-  toggleComplete: (id) => set((state) => ({
-    todos: state.todos.map(t => 
-      t.id === id ? { ...t, is_completed: !t.is_completed } : t
-    )
-  })),
+  notificationIds: {},
 
   setFilter: (filter) => set({ filter }),
+
+  fetchTodos: async () => {
+    try {
+      set({ isLoading: true });
+      const todos = await todoService.getTodos({ isCompleted: false });
+      set({ todos, isLoading: false });
+    } catch (err: unknown) {
+      set({ isLoading: false });
+      const message = err instanceof Error ? err.message : 'Failed to load todos.';
+      Alert.alert('Error', message);
+    }
+  },
+
+  createTodo: async (payload) => {
+    try {
+      const todo = await todoService.createTodo(payload);
+      const notificationId = await scheduleReminderNotification(todo);
+
+      set((state) => ({
+        todos: [todo, ...state.todos],
+        notificationIds: notificationId ? { ...state.notificationIds, [todo.id]: notificationId } : state.notificationIds,
+      }));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to create todo.';
+      Alert.alert('Error', message);
+    }
+  },
+
+  updateTodo: async (payload) => {
+    try {
+      const todo = await todoService.updateTodo(payload);
+      const oldNotificationId = get().notificationIds[todo.id];
+
+      if (oldNotificationId) {
+        await cancelReminderNotification(oldNotificationId);
+      }
+
+      const notificationId = await scheduleReminderNotification(todo);
+
+      set((state) => {
+        const nextIds = { ...state.notificationIds };
+        if (notificationId) {
+          nextIds[todo.id] = notificationId;
+        } else {
+          delete nextIds[todo.id];
+        }
+
+        return {
+          todos: state.todos.map((entry) => (entry.id === todo.id ? todo : entry)),
+          notificationIds: nextIds,
+        };
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to update todo.';
+      Alert.alert('Error', message);
+    }
+  },
+
+  deleteTodo: async (id) => {
+    try {
+      await todoService.deleteTodo(id);
+      const notificationId = get().notificationIds[id];
+      if (notificationId) {
+        await cancelReminderNotification(notificationId);
+      }
+
+      set((state) => {
+        const nextIds = { ...state.notificationIds };
+        delete nextIds[id];
+        return {
+          todos: state.todos.filter((todo) => todo.id !== id),
+          notificationIds: nextIds,
+        };
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to delete todo.';
+      Alert.alert('Error', message);
+    }
+  },
+
+  toggleComplete: async (todo) => {
+    const previousTodos = get().todos;
+    const optimisticTodo = { ...todo, is_completed: !todo.is_completed };
+
+    set((state) => ({
+      todos: state.todos.map((entry) => (entry.id === todo.id ? optimisticTodo : entry)),
+    }));
+
+    try {
+      const updatedTodo = await todoService.updateTodo({ id: todo.id, is_completed: optimisticTodo.is_completed });
+      const notificationId = get().notificationIds[todo.id];
+      if (notificationId) {
+        await cancelReminderNotification(notificationId);
+      }
+      const nextNotificationId = await scheduleReminderNotification(updatedTodo);
+
+      set((state) => {
+        const nextIds = { ...state.notificationIds };
+        if (nextNotificationId) {
+          nextIds[todo.id] = nextNotificationId;
+        } else {
+          delete nextIds[todo.id];
+        }
+
+        return {
+          todos: state.todos.map((entry) => (entry.id === todo.id ? updatedTodo : entry)),
+          notificationIds: nextIds,
+        };
+      });
+    } catch (err: unknown) {
+      set({ todos: previousTodos });
+      const message = err instanceof Error ? err.message : 'Failed to update todo status.';
+      Alert.alert('Error', message);
+    }
+  },
+
+  getGroupedTodos: () => {
+    const { todos, filter } = get();
+    const activeTodos = todos.filter((todo) => !todo.is_completed);
+
+    const filteredTodos = activeTodos.filter((todo) => {
+      if (filter === 'high_priority') {
+        return todo.priority === 'high';
+      }
+
+      if (filter === 'today') {
+        const dueToday = todo.due_date ? isToday(new Date(todo.due_date)) : false;
+        const reminderToday = todo.reminder_at ? isToday(new Date(todo.reminder_at)) : false;
+        return dueToday || reminderToday;
+      }
+
+      return true;
+    });
+
+    const todayStart = startOfDay(new Date());
+
+    return {
+      overdue: filteredTodos
+        .filter((todo) => todo.due_date && isBefore(new Date(todo.due_date), todayStart))
+        .sort(sortByDueDate),
+      today: filteredTodos.filter((todo) => todo.due_date && isToday(new Date(todo.due_date))).sort(sortByDueDate),
+      upcoming: filteredTodos
+        .filter((todo) => !todo.due_date || (!isToday(new Date(todo.due_date)) && new Date(todo.due_date) > todayStart))
+        .sort(sortByDueDate),
+    };
+  },
 }));

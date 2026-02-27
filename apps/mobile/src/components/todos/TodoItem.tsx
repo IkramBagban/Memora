@@ -1,0 +1,110 @@
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { format, isBefore, isToday, startOfToday } from 'date-fns';
+import { Colors, Radius, Shadow, Spacing, Typography, type Priority, type Todo } from '@memora/shared';
+
+interface TodoItemProps {
+  todo: Todo;
+  onToggleComplete: (todo: Todo) => void;
+  onPress: (todo: Todo) => void;
+  onDelete: (id: string) => void;
+  onPriorityCycle: (todo: Todo, nextPriority: Priority) => void;
+}
+
+const priorityOrder: Priority[] = ['low', 'medium', 'high'];
+
+const priorityColorMap: Record<Priority, string> = {
+  low: Colors.priorityLow,
+  medium: Colors.priorityMedium,
+  high: Colors.priorityHigh,
+};
+
+export function TodoItem({ todo, onToggleComplete, onPress, onDelete, onPriorityCycle }: TodoItemProps) {
+  const isOverdue = Boolean(todo.due_date && isBefore(new Date(todo.due_date), startOfToday()) && !todo.is_completed);
+
+  const nextPriority = priorityOrder[(priorityOrder.indexOf(todo.priority) + 1) % priorityOrder.length];
+
+  return (
+    <Pressable
+      accessibilityLabel={`Todo ${todo.title}`}
+      onLongPress={() => onPriorityCycle(todo, nextPriority)}
+      onPress={() => onPress(todo)}
+      style={[styles.card, isOverdue ? styles.overdue : undefined, todo.priority === 'high' ? styles.highPriority : undefined]}
+    >
+      <Pressable accessibilityLabel="Toggle completion" onPress={() => onToggleComplete(todo)} style={styles.checkbox}>
+        <Ionicons
+          color={todo.is_completed ? Colors.primary : Colors.border}
+          name={todo.is_completed ? 'checkmark-circle' : 'ellipse-outline'}
+          size={26}
+        />
+      </Pressable>
+
+      <View style={styles.content}>
+        <View style={styles.headerRow}>
+          <Text numberOfLines={1} style={[styles.title, todo.is_completed ? styles.titleCompleted : undefined]}>
+            {todo.title}
+          </Text>
+          <View style={[styles.priorityBadge, { backgroundColor: priorityColorMap[todo.priority] }]}>
+            <Text style={styles.priorityText}>{todo.priority.toUpperCase()}</Text>
+          </View>
+        </View>
+
+        {todo.description ? (
+          <Text numberOfLines={1} style={styles.description}>
+            {todo.description}
+          </Text>
+        ) : null}
+
+        <View style={styles.metaRow}>
+          {todo.due_date ? (
+            <View style={styles.metaItem}>
+              <Ionicons color={isOverdue ? Colors.error : Colors.textSecondary} name="calendar-outline" size={12} />
+              <Text style={[styles.metaText, isOverdue ? styles.metaTextOverdue : undefined]}>
+                {isToday(new Date(todo.due_date)) ? 'Today' : format(new Date(todo.due_date), 'MMM d')}
+              </Text>
+            </View>
+          ) : null}
+
+          {todo.reminder_at ? (
+            <View style={styles.metaItem}>
+              <Ionicons color={Colors.textSecondary} name="notifications-outline" size={12} />
+              <Text style={styles.metaText}>{format(new Date(todo.reminder_at), 'h:mm a')}</Text>
+            </View>
+          ) : null}
+
+          <Pressable accessibilityLabel="Delete todo" onPress={() => onDelete(todo.id)} style={styles.deleteButton}>
+            <Ionicons color={Colors.error} name="trash-outline" size={16} />
+          </Pressable>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: Colors.surface,
+    borderLeftColor: Colors.border,
+    borderLeftWidth: Spacing.xs,
+    borderRadius: Radius.md,
+    flexDirection: 'row',
+    marginBottom: Spacing.sm,
+    padding: Spacing.md,
+    ...Shadow.sm,
+  },
+  overdue: { borderLeftColor: Colors.error },
+  highPriority: { borderLeftColor: Colors.priorityHigh },
+  checkbox: { justifyContent: 'center', marginRight: Spacing.sm, paddingRight: Spacing.xs },
+  content: { flex: 1, gap: Spacing.xs },
+  headerRow: { alignItems: 'center', flexDirection: 'row', gap: Spacing.sm },
+  title: { color: Colors.textPrimary, flex: 1, fontSize: Typography.size.md, fontWeight: Typography.weight.semibold },
+  titleCompleted: { color: Colors.textSecondary, opacity: 0.6, textDecorationLine: 'line-through' },
+  priorityBadge: { borderRadius: Radius.full, paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs },
+  priorityText: { color: Colors.textInverse, fontSize: Typography.size.xs, fontWeight: Typography.weight.bold },
+  description: { color: Colors.textSecondary, fontSize: Typography.size.sm },
+  metaRow: { alignItems: 'center', flexDirection: 'row', gap: Spacing.sm },
+  metaItem: { alignItems: 'center', flexDirection: 'row', gap: Spacing.xs },
+  metaText: { color: Colors.textSecondary, fontSize: Typography.size.sm },
+  metaTextOverdue: { color: Colors.error, fontWeight: Typography.weight.semibold },
+  deleteButton: { marginLeft: 'auto', padding: Spacing.xs },
+});

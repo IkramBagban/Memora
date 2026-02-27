@@ -1,8 +1,12 @@
-﻿{
+{
   "name": "memora",
   "private": true,
   "workspaces": [
     "apps/mobile",
     "packages/shared"
-  ]
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspace apps/mobile",
+    "typecheck": "npm run typecheck --workspace apps/mobile"
+  }
 }

@@ -387,104 +387,104 @@ s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
 
-[functions.create-flashcard-deck]
-enabled = true
-verify_jwt = true
-import_map = "./functions/create-flashcard-deck/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/create-flashcard-deck/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/create-flashcard-deck/*.html" ]
+#[functions.create-flashcard-deck]
+#enabled = true
+#verify_jwt = true
+#import_map = "./functions/create-flashcard-deck/deno.json"
+## Uncomment to specify a custom file path to the entrypoint.
+## Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+#entrypoint = "./functions/create-flashcard-deck/index.ts"
+## Specifies static files to be bundled with the function. Supports glob patterns.
+## For example, if you want to serve static HTML pages in your function:
+## static_files = [ "./functions/create-flashcard-deck/*.html" ]
 
-[functions.get-flashcard-decks]
-enabled = true
-verify_jwt = true
-import_map = "./functions/get-flashcard-decks/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/get-flashcard-decks/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/get-flashcard-decks/*.html" ]
+#[functions.get-flashcard-decks]
+#enabled = true
+#verify_jwt = true
+#import_map = "./functions/get-flashcard-decks/deno.json"
+## Uncomment to specify a custom file path to the entrypoint.
+## Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+#entrypoint = "./functions/get-flashcard-decks/index.ts"
+## Specifies static files to be bundled with the function. Supports glob patterns.
+## For example, if you want to serve static HTML pages in your function:
+## static_files = [ "./functions/get-flashcard-decks/*.html" ]
 
-[functions.update-flashcard-deck]
-enabled = true
-verify_jwt = true
-import_map = "./functions/update-flashcard-deck/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/update-flashcard-deck/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/update-flashcard-deck/*.html" ]
+#[functions.update-flashcard-deck]
+#enabled = true
+#verify_jwt = true
+#import_map = "./functions/update-flashcard-deck/deno.json"
+## Uncomment to specify a custom file path to the entrypoint.
+## Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+#entrypoint = "./functions/update-flashcard-deck/index.ts"
+## Specifies static files to be bundled with the function. Supports glob patterns.
+## For example, if you want to serve static HTML pages in your function:
+## static_files = [ "./functions/update-flashcard-deck/*.html" ]
 
-[functions.delete-flashcard-deck]
-enabled = true
-verify_jwt = true
-import_map = "./functions/delete-flashcard-deck/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/delete-flashcard-deck/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/delete-flashcard-deck/*.html" ]
+#[functions.delete-flashcard-deck]
+#enabled = true
+#verify_jwt = true
+#import_map = "./functions/delete-flashcard-deck/deno.json"
+## Uncomment to specify a custom file path to the entrypoint.
+## Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+#entrypoint = "./functions/delete-flashcard-deck/index.ts"
+## Specifies static files to be bundled with the function. Supports glob patterns.
+## For example, if you want to serve static HTML pages in your function:
+## static_files = [ "./functions/delete-flashcard-deck/*.html" ]
 
-[functions.create-flashcard]
-enabled = true
-verify_jwt = true
-import_map = "./functions/create-flashcard/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/create-flashcard/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/create-flashcard/*.html" ]
+#[functions.create-flashcard]
+#enabled = true
+#verify_jwt = true
+#import_map = "./functions/create-flashcard/deno.json"
+## Uncomment to specify a custom file path to the entrypoint.
+## Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+#entrypoint = "./functions/create-flashcard/index.ts"
+## Specifies static files to be bundled with the function. Supports glob patterns.
+## For example, if you want to serve static HTML pages in your function:
+## static_files = [ "./functions/create-flashcard/*.html" ]
 
-[functions.update-flashcard]
-enabled = true
-verify_jwt = true
-import_map = "./functions/update-flashcard/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/update-flashcard/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/update-flashcard/*.html" ]
+#[functions.update-flashcard]
+#enabled = true
+#verify_jwt = true
+#import_map = "./functions/update-flashcard/deno.json"
+## Uncomment to specify a custom file path to the entrypoint.
+## Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+#entrypoint = "./functions/update-flashcard/index.ts"
+## Specifies static files to be bundled with the function. Supports glob patterns.
+## For example, if you want to serve static HTML pages in your function:
+## static_files = [ "./functions/update-flashcard/*.html" ]
 
-[functions.delete-flashcard]
-enabled = true
-verify_jwt = true
-import_map = "./functions/delete-flashcard/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/delete-flashcard/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/delete-flashcard/*.html" ]
+#[functions.delete-flashcard]
+#enabled = true
+#verify_jwt = true
+#import_map = "./functions/delete-flashcard/deno.json"
+## Uncomment to specify a custom file path to the entrypoint.
+## Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+#entrypoint = "./functions/delete-flashcard/index.ts"
+## Specifies static files to be bundled with the function. Supports glob patterns.
+## For example, if you want to serve static HTML pages in your function:
+## static_files = [ "./functions/delete-flashcard/*.html" ]
 
-[functions.get-due-flashcards]
-enabled = true
-verify_jwt = true
-import_map = "./functions/get-due-flashcards/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/get-due-flashcards/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/get-due-flashcards/*.html" ]
+#[functions.get-due-flashcards]
+#enabled = true
+#verify_jwt = true
+#import_map = "./functions/get-due-flashcards/deno.json"
+## Uncomment to specify a custom file path to the entrypoint.
+## Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+#entrypoint = "./functions/get-due-flashcards/index.ts"
+## Specifies static files to be bundled with the function. Supports glob patterns.
+## For example, if you want to serve static HTML pages in your function:
+## static_files = [ "./functions/get-due-flashcards/*.html" ]
 
-[functions.review-flashcard]
-enabled = true
-verify_jwt = true
-import_map = "./functions/review-flashcard/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/review-flashcard/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/review-flashcard/*.html" ]
+#[functions.review-flashcard]
+#enabled = true
+#verify_jwt = true
+#import_map = "./functions/review-flashcard/deno.json"
+## Uncomment to specify a custom file path to the entrypoint.
+## Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+#entrypoint = "./functions/review-flashcard/index.ts"
+## Specifies static files to be bundled with the function. Supports glob patterns.
+## For example, if you want to serve static HTML pages in your function:
+## static_files = [ "./functions/review-flashcard/*.html" ]
 
 [functions.create-todo]
 enabled = true
