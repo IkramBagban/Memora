@@ -119,6 +119,13 @@ Every edge function MUST verify the JWT and extract `user_id`. A user can ONLY r
     - `"zod": "npm:zod@3.25.76"`
 - Missing import maps cause deploy bundling errors like `Relative import path "zod" not prefixed...`.
 
+### 9. Browser CORS + Preflight (Edge Functions)
+- Any edge function called from web clients must handle preflight first:
+    - `if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })`
+- Success and error responses must include shared CORS headers via `_shared/response.ts` helpers.
+- Keep browser-invoked functions consistent with gateway auth mode during deploy (for this repo, deploy with `--no-verify-jwt`) and enforce auth inside the function using `_shared/auth.ts`.
+- If browser shows `Response to preflight request doesn't pass access control check`, verify live `OPTIONS` returns `200` before debugging app code.
+
 ---
 
 ## Authentication Flow

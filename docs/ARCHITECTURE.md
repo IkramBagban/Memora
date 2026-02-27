@@ -125,6 +125,7 @@ CREATE POLICY "Users can only access their own todos"
 | `update-todo` | PATCH | Update any todo fields |
 | `delete-todo` | DELETE | Delete a todo |
 | `get-todos` | GET | List todos with filters |
+| `get-home-summary` | GET | Home dashboard streak + today summary metrics |
 | `send-notification` | POST | Internal — sends email via Resend |
 
 ---

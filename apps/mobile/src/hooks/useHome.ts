@@ -1,0 +1,81 @@
+import { useCallback, useMemo, useState } from 'react';
+import { Alert } from 'react-native';
+import { useAuthStore } from '@/stores/auth.store';
+import { useFlashcardStore } from '@/stores/flashcard.store';
+import { useTodoStore } from '@/stores/todo.store';
+import { homeService } from '@/services/home.service';
+import { isToday } from 'date-fns';
+
+function getGreeting(name: string): string {
+  const hour = new Date().getHours();
+
+  if (hour < 12) {
+    return `Good morning, ${name} 👋`;
+  }
+
+  if (hour < 17) {
+    return `Good afternoon, ${name} 👋`;
+  }
+
+  return `Good evening, ${name} 👋`;
+}
+
+function getFirstNameFromEmail(email?: string): string {
+  if (!email) {
+    return 'there';
+  }
+
+  const [localPart] = email.split('@');
+  if (!localPart) {
+    return 'there';
+  }
+
+  return `${localPart[0].toUpperCase()}${localPart.slice(1)}`;
+}
+
+export function useHome() {
+  const { user } = useAuthStore();
+  const { decks, fetchDecks } = useFlashcardStore();
+  const { todos, fetchTodos } = useTodoStore();
+
+  const [isSummaryLoading, setSummaryLoading] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
+
+  const totalDue = useMemo(() => decks.reduce((sum, deck) => sum + deck.due_count, 0), [decks]);
+  const reviewDecks = useMemo(() => decks.filter((deck) => deck.due_count > 0), [decks]);
+  const todayTodos = useMemo(
+    () => todos.filter((todo) => !todo.is_completed && todo.due_date && isToday(new Date(todo.due_date))),
+    [todos],
+  );
+
+  const greeting = useMemo(() => getGreeting(getFirstNameFromEmail(user?.email)), [user?.email]);
+  const todayLabel = useMemo(
+    () => new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' }),
+    [],
+  );
+
+  const refreshHome = useCallback(async () => {
+    try {
+      setSummaryLoading(true);
+      await Promise.all([fetchDecks(), fetchTodos()]);
+      const summary = await homeService.getSummary();
+      setCurrentStreak(summary.current_streak);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to refresh home';
+      Alert.alert('Error', message);
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, [fetchDecks, fetchTodos]);
+
+  return {
+    greeting,
+    todayLabel,
+    totalDue,
+    todayTodos,
+    reviewDecks,
+    currentStreak,
+    isSummaryLoading,
+    refreshHome,
+  };
+}

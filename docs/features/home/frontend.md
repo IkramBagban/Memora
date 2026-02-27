@@ -36,8 +36,8 @@ Saturday, 1 Feb                     (current date, textSecondary)
 
 ─────────────────────────────────────
 
-"Your Streak" section  (future — placeholder for now)
-  Streak count + fire emoji
+"Your Streak" section
+  Current streak count + fire emoji
 
 ─────────────────────────────────────
 ```
@@ -98,3 +98,13 @@ Fetch both on tab focus using `useFocusEffect` from Expo Router.
 - Home screen should load from store cache immediately, then refresh in background
 - Show skeleton loaders only on first load
 - Use `useFocusEffect` to refresh counts when returning to home tab
+
+
+---
+
+## Streak Rules
+
+- Streak is based on flashcard reviews only in v1.
+- A day counts when the user reviews at least one flashcard.
+- Current streak increments for each consecutive day including today.
+- If no review is completed today, streak ends at yesterday's total.

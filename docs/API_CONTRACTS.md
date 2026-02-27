@@ -18,6 +18,20 @@ Authorization: Bearer <supabase_jwt_token>
 
 The Supabase client attaches this automatically when using `supabase.functions.invoke()`.
 
+## Browser CORS Requirement
+
+- Edge functions invoked from browser origins (for example `http://localhost:8081`) must respond to preflight requests with HTTP `200`.
+- Implement in every browser-invoked function:
+
+```ts
+if (req.method === 'OPTIONS') {
+  return new Response('ok', { headers: corsHeaders })
+}
+```
+
+- All normal success/error responses must include CORS headers (use shared response helpers).
+- For this repository's current setup, deploy browser-invoked functions with `--no-verify-jwt`, and keep JWT validation in-function via shared `verifyAuth()`.
+
 ---
 
 ## Standard Response Envelope
@@ -341,5 +355,24 @@ Request body:
     body: string
     data?: Record<string, unknown>
   }
+}
+```
+
+
+---
+
+## Home
+
+### `get-home-summary`
+**GET**
+
+No body. Returns aggregated metrics for the authenticated user's home dashboard.
+
+Response `data`:
+```ts
+{
+  current_streak: number          // consecutive days with at least one flashcard review
+  completed_todos_today: number   // todos marked completed today
+  reviewed_cards_today: number    // flashcards reviewed today
 }
 ```
