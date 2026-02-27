@@ -107,6 +107,10 @@ npm run lint && npm run typecheck
 
 8. **Run `npm run lint` before finishing any task.** Fix all errors.
 
+9. **Any new table/column/index/policy change must have a migration in `supabase/migrations/`.** Never leave schema changes only in docs or code assumptions.
+
+10. **Every new edge function folder must include `deno.json` import map when shared validators are used.** At minimum map `"zod": "npm:zod@3.25.76"` so shared `packages/shared/validators/*.ts` imports bundle correctly.
+
 ---
 
 ## Coding standards
@@ -136,6 +140,7 @@ npm run lint && npm run typecheck
 
 - Do not install new packages without checking if the functionality already exists in the shared package or a current dependency
 - Do not create migration files manually — use `npx supabase migration new <name>`
+- Do not add or rename DB tables without adding/updating a matching migration file in `supabase/migrations/`
 - Do not commit `.env` files or any secrets
 - Do not use `AsyncStorage` for sensitive data — use `expo-secure-store`
 - Do not write platform-specific (iOS/Android) code in `packages/shared/`

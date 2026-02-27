@@ -1,7 +1,7 @@
 import { Alert } from 'react-native';
 import { create } from 'zustand';
 import { isBefore, isToday, startOfDay } from 'date-fns';
-import type { CreateTodoPayload, Priority, Todo, UpdateTodoPayload } from '@memora/shared';
+import type { CreateTodoPayload, Todo, UpdateTodoPayload } from '@memora/shared';
 import { cancelReminderNotification, scheduleReminderNotification } from '@/hooks/use-notifications';
 import { todoService } from '@/services/todo.service';
 

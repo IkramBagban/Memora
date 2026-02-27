@@ -1,6 +1,16 @@
-import type { ZodSchema } from 'npm:zod@3.25.76';
+import type { ZodSchema } from 'npm:zod';
 
-export const validateBody = async <T>(req: Request, schema: ZodSchema<T>): Promise<T> => {
+export async function validateBody<T>(req: Request, schema: ZodSchema<T>): Promise<T> {
   const body = await req.json();
-  return schema.parse(body);
-};
+  const result = schema.safeParse(body);
+
+  if (!result.success) {
+    throw {
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: result.error.issues[0]?.message ?? 'Invalid request body',
+    };
+  }
+
+  return result.data;
+}

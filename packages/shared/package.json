@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "ts-fsrs": "^4.5.0",
     "zod": "^3.25.76"
   }
 }

@@ -45,6 +45,8 @@ export default function RootLayout() {
         <Stack.Screen name="auth/login" options={{ headerShown: false }} />
         <Stack.Screen name="auth/signup" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="flashcards/[deckId]" options={{ headerShown: false }} />
+        <Stack.Screen name="flashcards/review" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="dark" />
     </>

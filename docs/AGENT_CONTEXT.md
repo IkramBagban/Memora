@@ -108,6 +108,17 @@ Every edge function MUST verify the JWT and extract `user_id`. A user can ONLY r
 - All components receive typed props via interface.
 - No `any` types. Ever.
 
+### 7. Database and Migration Discipline
+- Any DB change (table, column, index, trigger, RLS policy, function) MUST be shipped in a SQL migration under `supabase/migrations/`.
+- If backend code references a table that is not present in migrations, add a migration before finishing.
+- Do not rely on manual dashboard schema edits as a source of truth.
+
+### 8. Edge Function Import Maps
+- If an edge function imports shared validators from `packages/shared/validators`, its function folder must include a `deno.json` import map.
+- Required mapping for validator support:
+    - `"zod": "npm:zod@3.25.76"`
+- Missing import maps cause deploy bundling errors like `Relative import path "zod" not prefixed...`.
+
 ---
 
 ## Authentication Flow

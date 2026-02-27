@@ -20,6 +20,12 @@ export const Colors = {
   warning: '#F59E0B',
   error: '#EF4444',
   info: '#3B82F6',
+  overlay: 'rgba(17, 24, 39, 0.4)',
+
+  // Deck palette
+  accentBlue: '#3B82F6',
+  accentPurple: '#A855F7',
+  accentTeal: '#14B8A6',
 
   // Priority colors (for todos)
   priorityLow: '#6B7280',

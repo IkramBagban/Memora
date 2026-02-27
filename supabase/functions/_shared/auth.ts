@@ -1,31 +1,25 @@
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-interface AuthenticatedUser {
-  id: string;
-}
+export async function verifyAuth(req: Request): Promise<string> {
+  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
 
-export const verifyAuth = async (req: Request): Promise<string> => {
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    throw { status: 401, code: 'UNAUTHORIZED', message: 'Missing authorization header' };
+  if (!token) {
+    throw { status: 401, code: 'UNAUTHORIZED', message: 'Missing token' };
   }
 
-  const token = authHeader.replace('Bearer ', '').trim();
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+  );
 
-  if (!supabaseUrl || !anonKey) {
-    throw { status: 500, code: 'CONFIG_ERROR', message: 'Missing Supabase environment configuration' };
-  }
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser(token);
 
-  const supabase = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
-
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) {
+  if (authError || !user) {
     throw { status: 401, code: 'UNAUTHORIZED', message: 'Invalid token' };
   }
 
-  return (data.user as AuthenticatedUser).id;
-};
+  return user.id;
+}

@@ -35,7 +35,7 @@ export default function HomeScreen() {
         {/* Hero Card */}
         <View style={styles.heroCard}>
           <View style={styles.heroHeader}>
-            <Text style={styles.heroTitle}>🧠 Today's Focus</Text>
+            <Text style={styles.heroTitle}>🧠 Today&apos;s Focus</Text>
           </View>
           <Text style={styles.heroText}>
             {totalDue} flashcards to review

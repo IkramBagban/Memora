@@ -16,7 +16,7 @@ interface SectionRow {
   todo?: Todo;
 }
 
-const filters: Array<{ key: TodoTabFilter; label: string }> = [
+const filters: { key: TodoTabFilter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'today', label: 'Today' },
   { key: 'high_priority', label: 'High Priority' },
@@ -173,7 +173,10 @@ export default function TodosScreen() {
         }}
         onSave={(payload) => {
           if (payload.id) {
-            void updateTodo(payload);
+            void updateTodo({
+              ...payload,
+              id: payload.id,
+            });
             return;
           }
 
