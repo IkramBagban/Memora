@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "8abaf39b-a9c4-4ad1-a16d-bef2e5fba4b0"
+      }
+    },
+    "android": {
+      "package": "com.ikram_bagban.memora"
+    }
+  }
+}
