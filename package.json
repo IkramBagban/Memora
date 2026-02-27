@@ -1,0 +1,8 @@
+﻿{
+  "name": "memora",
+  "private": true,
+  "workspaces": [
+    "apps/mobile",
+    "packages/shared"
+  ]
+}
