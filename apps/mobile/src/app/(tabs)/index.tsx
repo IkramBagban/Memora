@@ -20,8 +20,17 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.greeting}>{greeting}</Text>
-          <Text style={styles.date}>{todayLabel}</Text>
+          <View>
+            <Text style={styles.greeting}>{greeting}</Text>
+            <Text style={styles.date}>{todayLabel}</Text>
+          </View>
+          <TouchableOpacity
+            accessibilityLabel="Open profile settings"
+            onPress={() => router.push('/profile')}
+            style={styles.profileButton}
+          >
+            <Ionicons color={Colors.textPrimary} name="person-circle-outline" size={Typography.size.xxxl} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.heroCard}>
@@ -103,6 +112,9 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxl,
   },
   header: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: Spacing.xl,
     marginTop: Spacing.md,
   },
@@ -116,6 +128,11 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.md,
     color: Colors.textSecondary,
     fontWeight: Typography.weight.medium,
+  },
+  profileButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.xs,
   },
   heroCard: {
     backgroundColor: Colors.primary,

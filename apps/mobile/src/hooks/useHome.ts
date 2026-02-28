@@ -33,6 +33,29 @@ function getFirstNameFromEmail(email?: string): string {
   return `${localPart[0].toUpperCase()}${localPart.slice(1)}`;
 }
 
+function normalizeDisplayName(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function getPreferredName(user: ReturnType<typeof useAuthStore.getState>['user']): string {
+  const displayName = normalizeDisplayName(user?.user_metadata?.display_name);
+  if (displayName) {
+    return displayName;
+  }
+
+  const fullName = normalizeDisplayName(user?.user_metadata?.full_name);
+  if (fullName) {
+    return fullName;
+  }
+
+  return getFirstNameFromEmail(user?.email);
+}
+
 export function useHome() {
   const { user } = useAuthStore();
   const { decks, fetchDecks } = useFlashcardStore();
@@ -48,7 +71,7 @@ export function useHome() {
     [todos],
   );
 
-  const greeting = useMemo(() => getGreeting(getFirstNameFromEmail(user?.email)), [user?.email]);
+  const greeting = useMemo(() => getGreeting(getPreferredName(user)), [user]);
   const todayLabel = useMemo(
     () => new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' }),
     [],

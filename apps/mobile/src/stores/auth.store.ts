@@ -12,6 +12,8 @@ interface AuthStore {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  updateDisplayName: (displayName: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
 }
 
 let hasAuthListener = false;
@@ -102,6 +104,40 @@ export const useAuthStore = create<AuthStore>((set) => ({
       }
 
       set({ user: null, session: null });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  updateDisplayName: async (displayName) => {
+    set({ isLoading: true });
+
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: { display_name: displayName },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      set({ user: data.user });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  updatePassword: async (password) => {
+    set({ isLoading: true });
+
+    try {
+      const { data, error } = await supabase.auth.updateUser({ password });
+
+      if (error) {
+        throw error;
+      }
+
+      set({ user: data.user });
     } finally {
       set({ isLoading: false });
     }

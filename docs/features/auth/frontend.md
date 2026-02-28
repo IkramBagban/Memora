@@ -146,3 +146,19 @@ When a user logs in and grants notification permission, save their Expo push tok
 const token = await Notifications.getExpoPushTokenAsync()
 await supabase.from('profiles').upsert({ id: user.id, push_token: token.data })
 ```
+
+
+### Profile & settings screen (`app/profile.tsx`)
+
+After login, users can open profile from the Home header.
+
+Recommended profile/settings sections:
+- **Account details**: email (read-only), editable display name
+- **Security**: update password (min 8 chars)
+- **Notifications**: show permission status and enable prompt
+- **Session**: sign out action
+
+Implementation notes:
+- Use `supabase.auth.updateUser()` for display name and password updates
+- Keep business logic in a `useProfile` hook, not directly in the component
+- Show errors/success via alerts or toast; never fail silently
