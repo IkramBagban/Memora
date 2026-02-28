@@ -4,6 +4,7 @@ import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-rou
 import { Colors, Radius, Shadow, Spacing, Typography, type Flashcard } from '@memora/shared';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFlashcards } from '@/hooks/useFlashcards';
+import { MarkdownText } from '@/components/ui/MarkdownText';
 
 export default function DeckDetailScreen() {
   const router = useRouter();
@@ -87,7 +88,7 @@ function CardItem({ card }: CardItemProps) {
 
   return (
     <View style={styles.cardItem}>
-      <Text style={styles.cardTitle} numberOfLines={1}>{card.front}</Text>
+      <View style={styles.cardTitleWrap}><MarkdownText content={card.front} numberOfLines={1} /></View>
       <View style={styles.stateBadge}><Text style={styles.stateText}>{label}</Text></View>
     </View>
   );
@@ -106,7 +107,7 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.md, paddingBottom: Spacing.xxl * 2 },
   empty: { color: Colors.textSecondary, textAlign: 'center', marginTop: Spacing.xl },
   cardItem: { backgroundColor: Colors.surface, borderRadius: Radius.md, padding: Spacing.md, marginBottom: Spacing.sm, ...Shadow.sm, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardTitle: { flex: 1, color: Colors.textPrimary },
+  cardTitleWrap: { flex: 1 },
   stateBadge: { borderRadius: Radius.full, backgroundColor: Colors.primaryLight, paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs },
   stateText: { color: Colors.primaryDark, fontSize: Typography.size.xs },
   fab: { position: 'absolute', right: Spacing.md, bottom: Spacing.xl, width: 56, height: 56, borderRadius: Radius.full, backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center', ...Shadow.lg },

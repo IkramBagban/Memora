@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Colors, Radius, Shadow, Spacing, Typography, type Flashcard, type ReviewRating } from '@memora/shared';
 import { RatingButtons } from './RatingButtons';
+import { MarkdownText } from '@/components/ui/MarkdownText';
 
 interface FlashcardReviewProps {
   card: Flashcard;
@@ -33,11 +34,11 @@ export function FlashcardReview({ card, progress, onRate }: FlashcardReviewProps
           flipped.value = withSpring(next);
         }} style={styles.cardWrap}>
         <Animated.View style={[styles.card, styles.front, frontStyle]}>
-          <Text style={styles.text}>{card.front}</Text>
+          <MarkdownText content={card.front} variant="title" />
           <Text style={styles.hint}>Tap to reveal answer</Text>
         </Animated.View>
         <Animated.View style={[styles.card, styles.back, backStyle]}>
-          <Text style={styles.text}>{card.back}</Text>
+          <MarkdownText content={card.back} />
         </Animated.View>
       </Pressable>
       {isRevealed ? <RatingButtons card={card} onRate={onRate} /> : null}
@@ -77,12 +78,6 @@ const styles = StyleSheet.create({
   },
   back: {
     backgroundColor: Colors.primaryLight,
-  },
-  text: {
-    color: Colors.textPrimary,
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.semibold,
-    textAlign: 'center',
   },
   hint: {
     marginTop: Spacing.md,
