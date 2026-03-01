@@ -6,6 +6,8 @@
     "packages/shared"
   ],
   "scripts": {
+    "build:android": "npm run build:android --workspace apps/mobile",
+    "build:android:preview": "npm run build:android:preview --workspace apps/mobile",
     "lint": "npm run lint --workspace apps/mobile",
     "typecheck": "npm run typecheck --workspace apps/mobile"
   }

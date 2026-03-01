@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "Memora",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -46,6 +46,12 @@
       "eas": {
         "projectId": "5d27495c-ef6d-4d6b-9236-294b5bb4c3fd"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5d27495c-ef6d-4d6b-9236-294b5bb4c3fd"
     }
   }
 }

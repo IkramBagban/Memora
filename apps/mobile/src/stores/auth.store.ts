@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { type Session, type User } from '@supabase/supabase-js';
 
-import { supabase } from '@/lib/supabase';
+import { assertSupabaseConfig, supabase } from '@/lib/supabase';
 
 interface AuthStore {
   user: User | null;
@@ -28,6 +28,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ isLoading: true });
 
     try {
+      assertSupabaseConfig();
+
       const { data, error } = await supabase.auth.getSession();
 
       if (error) {
@@ -50,6 +52,12 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
         hasAuthListener = true;
       }
+    } catch {
+      set({
+        isInitialized: true,
+        session: null,
+        user: null,
+      });
     } finally {
       set({ isLoading: false });
     }
@@ -59,6 +67,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ isLoading: true });
 
     try {
+      assertSupabaseConfig();
+
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
@@ -78,6 +88,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ isLoading: true });
 
     try {
+      assertSupabaseConfig();
+
       const { data, error } = await supabase.auth.signUp({ email, password });
 
       if (error) {
@@ -97,6 +109,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ isLoading: true });
 
     try {
+      assertSupabaseConfig();
+
       const { error } = await supabase.auth.signOut();
 
       if (error) {
@@ -113,6 +127,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ isLoading: true });
 
     try {
+      assertSupabaseConfig();
+
       const { data, error } = await supabase.auth.updateUser({
         data: { display_name: displayName },
       });
@@ -131,6 +147,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ isLoading: true });
 
     try {
+      assertSupabaseConfig();
+
       const { data, error } = await supabase.auth.updateUser({ password });
 
       if (error) {

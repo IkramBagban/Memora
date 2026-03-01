@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { invokeSupabaseFunction } from '@/lib/supabase';
 import {
   CreateTodoSchema,
   DeleteTodoSchema,
@@ -36,7 +36,7 @@ export const todoService = {
       due_today: filter?.dueToday,
     });
 
-    const { data, error } = await supabase.functions.invoke(`get-todos${toQueryParams(filter)}`);
+    const { data, error } = await invokeSupabaseFunction(`get-todos${toQueryParams(filter)}`);
     if (error || !data?.success) {
       throw new Error(data?.error?.message ?? error?.message ?? 'Unable to fetch todos.');
     }
@@ -47,7 +47,7 @@ export const todoService = {
   async createTodo(payload: CreateTodoPayload): Promise<Todo> {
     const validatedPayload = CreateTodoSchema.parse(payload);
 
-    const { data, error } = await supabase.functions.invoke('create-todo', {
+    const { data, error } = await invokeSupabaseFunction('create-todo', {
       body: validatedPayload,
     });
     if (error || !data?.success) {
@@ -60,7 +60,7 @@ export const todoService = {
   async updateTodo(payload: UpdateTodoPayload): Promise<Todo> {
     const validatedPayload = UpdateTodoSchema.parse(payload);
 
-    const { data, error } = await supabase.functions.invoke('update-todo', {
+    const { data, error } = await invokeSupabaseFunction('update-todo', {
       body: validatedPayload,
     });
     if (error || !data?.success) {
@@ -73,7 +73,7 @@ export const todoService = {
   async deleteTodo(id: string): Promise<void> {
     const validatedPayload = DeleteTodoSchema.parse({ id });
 
-    const { data, error } = await supabase.functions.invoke('delete-todo', {
+    const { data, error } = await invokeSupabaseFunction('delete-todo', {
       body: validatedPayload,
     });
     if (error || !data?.success) {

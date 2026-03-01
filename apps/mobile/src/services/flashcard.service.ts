@@ -11,7 +11,7 @@ import type {
   UpdateFlashcardPayload,
 } from '@memora/shared';
 import type { FunctionInvokeOptions } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { invokeSupabaseFunction } from '@/lib/supabase';
 
 interface Envelope<T> {
   success: boolean;
@@ -20,7 +20,7 @@ interface Envelope<T> {
 }
 
 async function invoke<T>(name: string, options?: FunctionInvokeOptions): Promise<T> {
-  const { data, error } = await supabase.functions.invoke(name, options);
+  const { data, error } = await invokeSupabaseFunction(name, options);
 
   if (error) {
     throw new Error(error.message);
