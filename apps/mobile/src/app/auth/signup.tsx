@@ -1,25 +1,42 @@
-import { Link } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Radius, Shadow, Spacing, Typography } from '@memora/shared/constants/design';
+import { Link } from "expo-router";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  Colors,
+  Radius,
+  Shadow,
+  Spacing,
+  Typography,
+} from "@memora/shared/constants/design";
 
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SignupScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const { signup, isLoading } = useAuth();
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.flex}
       >
         <View style={styles.content}>
           <Text style={styles.title}>Create account</Text>
-          <Text style={styles.subtitle}>Build your calm memory workflow in seconds.</Text>
+          <Text style={styles.subtitle}>
+            Build your calm memory workflow in seconds.
+          </Text>
 
           <View style={styles.formCard}>
             <TextInput
@@ -51,7 +68,10 @@ export default function SignupScreen() {
               onPress={() => {
                 void signup(email, password);
               }}
-              style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
+              style={({ pressed }) => [
+                styles.primaryButton,
+                pressed && styles.primaryButtonPressed,
+              ]}
             >
               {isLoading ? (
                 <ActivityIndicator color={Colors.textInverse} />
@@ -63,7 +83,9 @@ export default function SignupScreen() {
 
           <View style={styles.row}>
             <Text style={styles.rowText}>Already have an account?</Text>
-            <Link href="/auth/login" style={styles.linkText}>Login</Link>
+            <Link href="/auth/login" style={styles.linkText}>
+              Login
+            </Link>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -81,19 +103,19 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: Spacing.md,
   },
   title: {
     fontSize: Typography.size.xxxl,
     fontWeight: Typography.weight.bold,
     color: Colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     marginTop: Spacing.xs,
     marginBottom: Spacing.xl,
-    textAlign: 'center',
+    textAlign: "center",
     color: Colors.textSecondary,
     fontSize: Typography.size.md,
   },
@@ -114,7 +136,7 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   primaryButton: {
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: Colors.primary,
     borderRadius: Radius.full,
     marginTop: Spacing.sm,
@@ -129,9 +151,9 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
   },
   row: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: Spacing.lg,
     gap: Spacing.xs,
   },

@@ -6,6 +6,7 @@ import { cancelReminderNotification, scheduleReminderNotification } from '@/hook
 import { todoService } from '@/services/todo.service';
 
 export type TodoTabFilter = 'all' | 'today' | 'high_priority';
+const TODO_STALE_MS = 60_000;
 
 interface GroupedTodos {
   overdue: Todo[];
@@ -18,8 +19,9 @@ interface TodoStore {
   isLoading: boolean;
   filter: TodoTabFilter;
   notificationIds: Record<string, string>;
+  lastFetchedAt: number | null;
   setFilter: (filter: TodoTabFilter) => void;
-  fetchTodos: () => Promise<void>;
+  fetchTodos: (force?: boolean) => Promise<void>;
   createTodo: (payload: CreateTodoPayload) => Promise<void>;
   updateTodo: (payload: UpdateTodoPayload) => Promise<void>;
   deleteTodo: (id: string) => Promise<void>;
@@ -39,14 +41,22 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   isLoading: false,
   filter: 'all',
   notificationIds: {},
+  lastFetchedAt: null,
 
   setFilter: (filter) => set({ filter }),
 
-  fetchTodos: async () => {
+  fetchTodos: async (force = false) => {
     try {
+      const { lastFetchedAt, todos } = get();
+      const isFresh = Boolean(lastFetchedAt && Date.now() - lastFetchedAt < TODO_STALE_MS);
+
+      if (!force && isFresh && todos.length > 0) {
+        return;
+      }
+
       set({ isLoading: true });
-      const todos = await todoService.getTodos({ isCompleted: false });
-      set({ todos, isLoading: false });
+      const fetchedTodos = await todoService.getTodos({ isCompleted: false });
+      set({ todos: fetchedTodos, isLoading: false, lastFetchedAt: Date.now() });
     } catch (err: unknown) {
       set({ isLoading: false });
       const message = err instanceof Error ? err.message : 'Failed to load todos.';
@@ -61,6 +71,7 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
 
       set((state) => ({
         todos: [todo, ...state.todos],
+        lastFetchedAt: Date.now(),
         notificationIds: notificationId ? { ...state.notificationIds, [todo.id]: notificationId } : state.notificationIds,
       }));
     } catch (err: unknown) {
@@ -90,6 +101,7 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
 
         return {
           todos: state.todos.map((entry) => (entry.id === todo.id ? todo : entry)),
+          lastFetchedAt: Date.now(),
           notificationIds: nextIds,
         };
       });
@@ -112,6 +124,7 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
         delete nextIds[id];
         return {
           todos: state.todos.filter((todo) => todo.id !== id),
+          lastFetchedAt: Date.now(),
           notificationIds: nextIds,
         };
       });
@@ -147,6 +160,7 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
 
         return {
           todos: state.todos.map((entry) => (entry.id === todo.id ? updatedTodo : entry)),
+          lastFetchedAt: Date.now(),
           notificationIds: nextIds,
         };
       });

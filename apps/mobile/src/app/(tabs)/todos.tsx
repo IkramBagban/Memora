@@ -1,25 +1,40 @@
-import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors, Radius, Shadow, Spacing, Typography, type Priority, type Todo } from '@memora/shared';
-import { TodoFormModal } from '@/components/todos/TodoFormModal';
-import { TodoItem } from '@/components/todos/TodoItem';
-import { useTodoStore, type TodoTabFilter } from '@/stores/todo.store';
+import { useCallback, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useFocusEffect } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  Colors,
+  Radius,
+  Shadow,
+  Spacing,
+  Typography,
+  type Priority,
+  type Todo,
+} from "@memora/shared";
+import { TodoFormModal } from "@/components/todos/TodoFormModal";
+import { TodoItem } from "@/components/todos/TodoItem";
+import { useTodoStore, type TodoTabFilter } from "@/stores/todo.store";
 
 interface SectionRow {
   id: string;
-  type: 'header' | 'todo';
+  type: "header" | "todo";
   label?: string;
   count?: number;
   todo?: Todo;
 }
 
 const filters: { key: TodoTabFilter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'today', label: 'Today' },
-  { key: 'high_priority', label: 'High Priority' },
+  { key: "all", label: "All" },
+  { key: "today", label: "Today" },
+  { key: "high_priority", label: "High Priority" },
 ];
 
 export default function TodosScreen() {
@@ -49,18 +64,39 @@ export default function TodosScreen() {
     const nextRows: SectionRow[] = [];
 
     if (groupedTodos.overdue.length) {
-      nextRows.push({ id: 'header-overdue', type: 'header', label: 'Overdue', count: groupedTodos.overdue.length });
-      groupedTodos.overdue.forEach((todo) => nextRows.push({ id: todo.id, type: 'todo', todo }));
+      nextRows.push({
+        id: "header-overdue",
+        type: "header",
+        label: "Overdue",
+        count: groupedTodos.overdue.length,
+      });
+      groupedTodos.overdue.forEach((todo) =>
+        nextRows.push({ id: todo.id, type: "todo", todo }),
+      );
     }
 
     if (groupedTodos.today.length) {
-      nextRows.push({ id: 'header-today', type: 'header', label: 'Today', count: groupedTodos.today.length });
-      groupedTodos.today.forEach((todo) => nextRows.push({ id: todo.id, type: 'todo', todo }));
+      nextRows.push({
+        id: "header-today",
+        type: "header",
+        label: "Today",
+        count: groupedTodos.today.length,
+      });
+      groupedTodos.today.forEach((todo) =>
+        nextRows.push({ id: todo.id, type: "todo", todo }),
+      );
     }
 
     if (groupedTodos.upcoming.length) {
-      nextRows.push({ id: 'header-upcoming', type: 'header', label: 'Upcoming', count: groupedTodos.upcoming.length });
-      groupedTodos.upcoming.forEach((todo) => nextRows.push({ id: todo.id, type: 'todo', todo }));
+      nextRows.push({
+        id: "header-upcoming",
+        type: "header",
+        label: "Upcoming",
+        count: groupedTodos.upcoming.length,
+      });
+      groupedTodos.upcoming.forEach((todo) =>
+        nextRows.push({ id: todo.id, type: "todo", todo }),
+      );
     }
 
     return nextRows;
@@ -95,9 +131,17 @@ export default function TodosScreen() {
             accessibilityLabel={`Filter by ${entry.label}`}
             key={entry.key}
             onPress={() => setFilter(entry.key)}
-            style={[styles.filterChip, filter === entry.key ? styles.filterChipActive : undefined]}
+            style={[
+              styles.filterChip,
+              filter === entry.key ? styles.filterChipActive : undefined,
+            ]}
           >
-            <Text style={[styles.filterChipText, filter === entry.key ? styles.filterChipTextActive : undefined]}>
+            <Text
+              style={[
+                styles.filterChipText,
+                filter === entry.key ? styles.filterChipTextActive : undefined,
+              ]}
+            >
               {entry.label}
             </Text>
           </Pressable>
@@ -114,7 +158,7 @@ export default function TodosScreen() {
           data={rows}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => {
-            if (item.type === 'header') {
+            if (item.type === "header") {
               return (
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>{item.label}</Text>
@@ -146,9 +190,17 @@ export default function TodosScreen() {
           }}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Ionicons color={Colors.textSecondary} name="checkmark-circle-outline" size={48} />
+              <Ionicons
+                color={Colors.textSecondary}
+                name="checkmark-circle-outline"
+                size={48}
+              />
               <Text style={styles.emptyTitle}>Nothing to do! 🎉</Text>
-              <Text style={styles.emptyDescription}>{filter === 'all' ? "You're all caught up." : 'No todos in this view.'}</Text>
+              <Text style={styles.emptyDescription}>
+                {filter === "all"
+                  ? "You're all caught up."
+                  : "No todos in this view."}
+              </Text>
             </View>
           }
         />
@@ -198,15 +250,28 @@ export default function TodosScreen() {
 const styles = StyleSheet.create({
   container: { backgroundColor: Colors.background, flex: 1 },
   headerRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,
   },
-  title: { color: Colors.textPrimary, fontSize: Typography.size.xxxl, fontWeight: Typography.weight.bold },
-  topButton: { backgroundColor: Colors.primaryLight, borderRadius: Radius.full, padding: Spacing.xs },
-  filtersRow: { flexDirection: 'row', gap: Spacing.sm, paddingHorizontal: Spacing.md, paddingTop: Spacing.md },
+  title: {
+    color: Colors.textPrimary,
+    fontSize: Typography.size.xxxl,
+    fontWeight: Typography.weight.bold,
+  },
+  topButton: {
+    backgroundColor: Colors.primaryLight,
+    borderRadius: Radius.full,
+    padding: Spacing.xs,
+  },
+  filtersRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+  },
   filterChip: {
     backgroundColor: Colors.surface,
     borderColor: Colors.border,
@@ -215,13 +280,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
   },
-  filterChipActive: { backgroundColor: Colors.primaryDark, borderColor: Colors.primaryDark },
-  filterChipText: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontWeight: Typography.weight.medium },
+  filterChipActive: {
+    backgroundColor: Colors.primaryDark,
+    borderColor: Colors.primaryDark,
+  },
+  filterChipText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.medium,
+  },
   filterChipTextActive: { color: Colors.textInverse },
-  listContent: { padding: Spacing.md, paddingBottom: Spacing.xxl * 2 },
-  loaderWrap: { alignItems: 'center', flex: 1, justifyContent: 'center' },
-  sectionHeader: { alignItems: 'center', flexDirection: 'row', marginBottom: Spacing.xs, marginTop: Spacing.md },
-  sectionTitle: { color: Colors.textPrimary, fontSize: Typography.size.lg, fontWeight: Typography.weight.semibold },
+  listContent: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.xxl * 2 + Spacing.xl,
+    paddingTop: Spacing.xs,
+  },
+  loaderWrap: { alignItems: "center", flex: 1, justifyContent: "center" },
+  sectionHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.xl,
+  },
+  sectionTitle: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
   sectionCount: {
     backgroundColor: Colors.primaryLight,
     borderRadius: Radius.full,
@@ -230,19 +317,33 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
     marginLeft: Spacing.sm,
     paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    paddingVertical: 2,
   },
-  emptyState: { alignItems: 'center', marginTop: Spacing.xxl, padding: Spacing.xxl },
-  emptyTitle: { color: Colors.textPrimary, fontSize: Typography.size.lg, fontWeight: Typography.weight.semibold, marginTop: Spacing.md },
-  emptyDescription: { color: Colors.textSecondary, fontSize: Typography.size.md, marginTop: Spacing.xs, textAlign: 'center' },
+  emptyState: {
+    alignItems: "center",
+    marginTop: Spacing.xxl,
+    padding: Spacing.xxl,
+  },
+  emptyTitle: {
+    color: Colors.textPrimary,
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.semibold,
+    marginTop: Spacing.md,
+  },
+  emptyDescription: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.md,
+    marginTop: Spacing.xs,
+    textAlign: "center",
+  },
   fab: {
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: Colors.primary,
     borderRadius: Radius.full,
     bottom: Spacing.xl,
     height: Spacing.xxl + Spacing.sm,
-    justifyContent: 'center',
-    position: 'absolute',
+    justifyContent: "center",
+    position: "absolute",
     right: Spacing.md,
     width: Spacing.xxl + Spacing.sm,
     ...Shadow.lg,

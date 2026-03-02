@@ -1,5 +1,13 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Colors, Radius, Spacing, Typography, previewRatings, type Flashcard, type ReviewRating } from '@memora/shared';
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Colors,
+  Radius,
+  Spacing,
+  Typography,
+  previewRatings,
+  type Flashcard,
+  type ReviewRating,
+} from "@memora/shared";
 
 interface RatingButtonsProps {
   card: Flashcard;
@@ -7,10 +15,10 @@ interface RatingButtonsProps {
 }
 
 const labels: Record<ReviewRating, string> = {
-  1: 'Again',
-  2: 'Hard',
-  3: 'Good',
-  4: 'Easy',
+  1: "Again",
+  2: "Hard",
+  3: "Good",
+  4: "Easy",
 };
 
 const colors: Record<ReviewRating, string> = {
@@ -26,7 +34,11 @@ export function RatingButtons({ card, onRate }: RatingButtonsProps) {
   return (
     <View style={styles.row}>
       {previews.map((preview) => (
-        <Pressable key={preview.rating} style={[styles.button, { backgroundColor: colors[preview.rating] }]} onPress={() => onRate(preview.rating)}>
+        <Pressable
+          key={preview.rating}
+          style={[styles.button, { backgroundColor: colors[preview.rating] }]}
+          onPress={() => onRate(preview.rating)}
+        >
           <Text style={styles.label}>{labels[preview.rating]}</Text>
           <Text style={styles.hint}>{preview.days}d</Text>
         </Pressable>
@@ -37,20 +49,23 @@ export function RatingButtons({ card, onRate }: RatingButtonsProps) {
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-    width: '100%',
+    flexDirection: "row",
+    gap: Spacing.sm,
+    width: "100%",
+    marginTop: Spacing.xs,
   },
   button: {
     flex: 1,
     borderRadius: Radius.md,
     paddingVertical: Spacing.sm,
-    alignItems: 'center',
+    minHeight: 60,
+    alignItems: "center",
+    justifyContent: "center",
   },
   label: {
     color: Colors.white,
     fontWeight: Typography.weight.semibold,
-    fontSize: Typography.size.sm,
+    fontSize: Typography.size.md,
   },
   hint: {
     color: Colors.white,

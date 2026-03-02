@@ -12,13 +12,16 @@ import type {
 import { Alert } from 'react-native';
 import { flashcardService } from '@/services/flashcard.service';
 
+const DECKS_STALE_MS = 60_000;
+
 interface FlashcardStore {
   decks: Deck[];
   deckCards: Flashcard[];
   dueCards: DueFlashcard[];
   isLoading: boolean;
   error: string | null;
-  fetchDecks: () => Promise<void>;
+  lastDecksFetchedAt: number | null;
+  fetchDecks: (force?: boolean) => Promise<void>;
   fetchDueCards: (deckId?: string) => Promise<void>;
   fetchDeckCards: (deckId: string) => Promise<void>;
   createDeck: (payload: CreateDeckPayload) => Promise<void>;
@@ -40,11 +43,19 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
   dueCards: [],
   isLoading: false,
   error: null,
-  async fetchDecks() {
+  lastDecksFetchedAt: null,
+  async fetchDecks(force = false) {
+    const { lastDecksFetchedAt, decks } = get();
+    const isFresh = Boolean(lastDecksFetchedAt && Date.now() - lastDecksFetchedAt < DECKS_STALE_MS);
+
+    if (!force && isFresh && decks.length > 0) {
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
       const decks = await flashcardService.getDecks();
-      set({ decks });
+      set({ decks, lastDecksFetchedAt: Date.now() });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to load decks';
       set({ error: message });
@@ -102,7 +113,10 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
 
     try {
       const created = await flashcardService.createDeck(payload);
-      set((state) => ({ decks: state.decks.map((deck) => (deck.id === optimisticDeck.id ? created : deck)) }));
+      set((state) => ({
+        decks: state.decks.map((deck) => (deck.id === optimisticDeck.id ? created : deck)),
+        lastDecksFetchedAt: Date.now(),
+      }));
     } catch (error: unknown) {
       set((state) => ({ decks: state.decks.filter((deck) => deck.id !== optimisticDeck.id) }));
       handleError(error instanceof Error ? error.message : 'Failed to create deck');
@@ -111,7 +125,10 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
   async updateDeck(payload) {
     try {
       const updated = await flashcardService.updateDeck(payload);
-      set((state) => ({ decks: state.decks.map((deck) => (deck.id === updated.id ? { ...deck, ...updated } : deck)) }));
+      set((state) => ({
+        decks: state.decks.map((deck) => (deck.id === updated.id ? { ...deck, ...updated } : deck)),
+        lastDecksFetchedAt: Date.now(),
+      }));
     } catch (error: unknown) {
       handleError(error instanceof Error ? error.message : 'Failed to update deck');
     }
@@ -121,6 +138,7 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
     set((state) => ({ decks: state.decks.filter((deck) => deck.id !== id) }));
     try {
       await flashcardService.deleteDeck({ id });
+      set({ lastDecksFetchedAt: Date.now() });
     } catch (error: unknown) {
       set({ decks: existing });
       handleError(error instanceof Error ? error.message : 'Failed to delete deck');
@@ -129,7 +147,7 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
   async createCard(payload) {
     try {
       await flashcardService.createCard(payload);
-      await get().fetchDecks();
+      await get().fetchDecks(true);
       await get().fetchDeckCards(payload.deck_id);
     } catch (error: unknown) {
       handleError(error instanceof Error ? error.message : 'Failed to create card');
@@ -148,7 +166,7 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
     set((state) => ({ deckCards: state.deckCards.filter((card) => card.id !== id) }));
     try {
       await flashcardService.deleteCard({ id });
-      await get().fetchDecks();
+      await get().fetchDecks(true);
     } catch (error: unknown) {
       set({ deckCards: existing });
       handleError(error instanceof Error ? error.message : 'Failed to delete card');

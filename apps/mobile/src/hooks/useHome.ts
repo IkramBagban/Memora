@@ -6,6 +6,8 @@ import { useTodoStore } from '@/stores/todo.store';
 import { homeService } from '@/services/home.service';
 import { isToday } from 'date-fns';
 
+const HOME_SUMMARY_STALE_MS = 60_000;
+
 function getGreeting(name: string): string {
   const hour = new Date().getHours();
 
@@ -63,6 +65,7 @@ export function useHome() {
 
   const [isSummaryLoading, setSummaryLoading] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [lastSummaryFetchedAt, setLastSummaryFetchedAt] = useState<number | null>(null);
 
   const totalDue = useMemo(() => decks.reduce((sum, deck) => sum + deck.due_count, 0), [decks]);
   const reviewDecks = useMemo(() => decks.filter((deck) => deck.due_count > 0), [decks]);
@@ -77,19 +80,25 @@ export function useHome() {
     [],
   );
 
-  const refreshHome = useCallback(async () => {
+  const refreshHome = useCallback(async (force = false) => {
     try {
+      const isSummaryFresh = Boolean(lastSummaryFetchedAt && Date.now() - lastSummaryFetchedAt < HOME_SUMMARY_STALE_MS);
+
       setSummaryLoading(true);
-      await Promise.all([fetchDecks(), fetchTodos()]);
-      const summary = await homeService.getSummary();
-      setCurrentStreak(summary.current_streak);
+      await Promise.all([fetchDecks(force), fetchTodos(force)]);
+
+      if (force || !isSummaryFresh) {
+        const summary = await homeService.getSummary();
+        setCurrentStreak(summary.current_streak);
+        setLastSummaryFetchedAt(Date.now());
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to refresh home';
       Alert.alert('Error', message);
     } finally {
       setSummaryLoading(false);
     }
-  }, [fetchDecks, fetchTodos]);
+  }, [fetchDecks, fetchTodos, lastSummaryFetchedAt]);
 
   return {
     greeting,

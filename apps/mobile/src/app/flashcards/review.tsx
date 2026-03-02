@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors, Radius, Spacing, Typography } from '@memora/shared';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { FlashcardReview } from '@/components/flashcards/FlashcardReview';
 import { useFlashcards } from '@/hooks/useFlashcards';
 
@@ -37,8 +38,12 @@ export default function ReviewScreen() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()}><Text style={styles.back}>Back</Text></Pressable>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={20} color={Colors.primary} />
+          <Text style={styles.back}>Back</Text>
+        </Pressable>
         <Text style={styles.title}>Review Session</Text>
+        <View style={styles.headerSpacer} />
       </View>
       {current ? (
         <FlashcardReview
@@ -58,10 +63,22 @@ export default function ReviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background, padding: Spacing.md },
-  header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  container: { flex: 1, backgroundColor: Colors.background, paddingHorizontal: Spacing.md, paddingTop: Spacing.sm },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.sm,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    minWidth: 72,
+  },
   back: { color: Colors.primary, fontWeight: Typography.weight.semibold },
-  title: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontWeight: Typography.weight.semibold },
+  title: { color: Colors.textPrimary, fontSize: Typography.size.xxl, fontWeight: Typography.weight.bold },
+  headerSpacer: { minWidth: 72 },
   empty: { color: Colors.textSecondary, textAlign: 'center', marginTop: Spacing.xl },
   completeTitle: { color: Colors.textPrimary, fontSize: Typography.size.xxl, fontWeight: Typography.weight.bold, marginTop: Spacing.xl },
   completeMeta: { color: Colors.textSecondary, fontSize: Typography.size.md, marginTop: Spacing.sm },

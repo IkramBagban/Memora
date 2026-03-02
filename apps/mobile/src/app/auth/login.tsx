@@ -1,26 +1,43 @@
-import { Link } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Radius, Shadow, Spacing, Typography } from '@memora/shared/constants/design';
+import { Link } from "expo-router";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  Colors,
+  Radius,
+  Shadow,
+  Spacing,
+  Typography,
+} from "@memora/shared/constants/design";
 
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from "@/hooks/use-auth";
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const { login, isLoading } = useAuth();
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.flex}
       >
         <View style={styles.content}>
           <Text style={styles.brand}>Memora</Text>
           <Text style={styles.title}>Welcome back</Text>
-          <Text style={styles.subtitle}>Sign in to continue your memory journey.</Text>
+          <Text style={styles.subtitle}>
+            Sign in to continue your memory journey.
+          </Text>
 
           <View style={styles.formCard}>
             <TextInput
@@ -52,7 +69,10 @@ export default function LoginScreen() {
               onPress={() => {
                 void login(email, password);
               }}
-              style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
+              style={({ pressed }) => [
+                styles.primaryButton,
+                pressed && styles.primaryButtonPressed,
+              ]}
             >
               {isLoading ? (
                 <ActivityIndicator color={Colors.textInverse} />
@@ -64,7 +84,9 @@ export default function LoginScreen() {
 
           <View style={styles.row}>
             <Text style={styles.rowText}>Don&apos;t have an account?</Text>
-            <Link href="/auth/signup" style={styles.linkText}>Sign up</Link>
+            <Link href="/auth/signup" style={styles.linkText}>
+              Sign up
+            </Link>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -82,26 +104,26 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: Spacing.md,
   },
   brand: {
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.bold,
     color: Colors.primary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: Spacing.sm,
   },
   title: {
     fontSize: Typography.size.xxxl,
     fontWeight: Typography.weight.bold,
     color: Colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     marginTop: Spacing.xs,
     marginBottom: Spacing.xl,
-    textAlign: 'center',
+    textAlign: "center",
     color: Colors.textSecondary,
     fontSize: Typography.size.md,
   },
@@ -122,7 +144,7 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   primaryButton: {
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: Colors.primary,
     borderRadius: Radius.full,
     marginTop: Spacing.sm,
@@ -137,9 +159,9 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
   },
   row: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: Spacing.lg,
     gap: Spacing.xs,
   },
