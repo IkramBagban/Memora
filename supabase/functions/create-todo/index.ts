@@ -13,12 +13,45 @@ const parseError = (err: unknown): { status: number; code: string; message: stri
   return { status: 500, code: 'INTERNAL_ERROR', message: 'Unknown error' };
 };
 
+const serializeRecurrence = (value: unknown): string | null | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  return JSON.stringify(value);
+};
+
+const parseRecurrence = (value: unknown): unknown => {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+};
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
     const userId = await verifyAuth(req);
     const body = await validateBody(req, CreateTodoSchema);
+    const insertPayload = {
+      ...body,
+      recurrence: serializeRecurrence(body.recurrence),
+      user_id: userId,
+    };
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -27,7 +60,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: todo, error: dbError } = await supabase
       .from('todos')
-      .insert({ ...body, user_id: userId })
+      .insert(insertPayload)
       .select('*')
       .single();
 
@@ -35,7 +68,10 @@ Deno.serve(async (req: Request) => {
       throw { status: 500, code: 'DB_ERROR', message: dbError.message };
     }
 
-    return success(todo, 201);
+    return success({
+      ...todo,
+      recurrence: parseRecurrence(todo.recurrence),
+    }, 201);
   } catch (err: unknown) {
     const appError = parseError(err);
     return error(appError.code, appError.message, appError.status);

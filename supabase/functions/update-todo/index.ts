@@ -13,6 +13,34 @@ const parseError = (err: unknown): { status: number; code: string; message: stri
   return { status: 500, code: 'INTERNAL_ERROR', message: 'Unknown error' };
 };
 
+const serializeRecurrence = (value: unknown): string | null | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  return JSON.stringify(value);
+};
+
+const parseRecurrence = (value: unknown): unknown => {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+};
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -28,7 +56,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: existingTodo, error: existingError } = await supabase
       .from('todos')
-      .select('id, user_id')
+      .select('id, user_id, recurrence')
       .eq('id', id)
       .single();
 
@@ -40,9 +68,13 @@ Deno.serve(async (req: Request) => {
       throw { status: 403, code: 'FORBIDDEN', message: 'Access denied' };
     }
 
+    const existingRecurrence = parseRecurrence(existingTodo.recurrence);
+    const hasRecurrence = Boolean(existingRecurrence || updates.recurrence);
+
     const finalUpdates = {
       ...updates,
-      ...(updates.is_completed === true ? { reminder_sent: true } : {}),
+      recurrence: serializeRecurrence(updates.recurrence),
+      ...(updates.is_completed === true && !hasRecurrence ? { reminder_sent: true } : {}),
       updated_at: new Date().toISOString(),
     };
 
@@ -58,7 +90,10 @@ Deno.serve(async (req: Request) => {
       throw { status: 500, code: 'DB_ERROR', message: dbError.message };
     }
 
-    return success(todo);
+    return success({
+      ...todo,
+      recurrence: parseRecurrence(todo.recurrence),
+    });
   } catch (err: unknown) {
     const appError = parseError(err);
     return error(appError.code, appError.message, appError.status);

@@ -3,12 +3,38 @@ import {
   CreateTodoSchema,
   DeleteTodoSchema,
   GetTodosQuerySchema,
+  type TodoRecurrence,
   type Todo,
   type TodoFilter,
   type CreateTodoPayload,
   type UpdateTodoPayload,
   UpdateTodoSchema,
 } from '@memora/shared';
+
+const parseRecurrence = (value: unknown): TodoRecurrence | null => {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value) as TodoRecurrence;
+    } catch {
+      return null;
+    }
+  }
+
+  if (typeof value === 'object') {
+    return value as TodoRecurrence;
+  }
+
+  return null;
+};
+
+const normalizeTodo = (todo: Todo & { recurrence?: unknown }): Todo => ({
+  ...todo,
+  recurrence: parseRecurrence(todo.recurrence),
+});
 
 const toQueryParams = (filter?: TodoFilter): string => {
   if (!filter) return '';
@@ -41,7 +67,7 @@ export const todoService = {
       throw new Error(data?.error?.message ?? error?.message ?? 'Unable to fetch todos.');
     }
 
-    return data.data as Todo[];
+    return (data.data as (Todo & { recurrence?: unknown })[]).map(normalizeTodo);
   },
 
   async createTodo(payload: CreateTodoPayload): Promise<Todo> {
@@ -54,7 +80,7 @@ export const todoService = {
       throw new Error(data?.error?.message ?? error?.message ?? 'Unable to create todo.');
     }
 
-    return data.data as Todo;
+    return normalizeTodo(data.data as Todo & { recurrence?: unknown });
   },
 
   async updateTodo(payload: UpdateTodoPayload): Promise<Todo> {
@@ -67,7 +93,7 @@ export const todoService = {
       throw new Error(data?.error?.message ?? error?.message ?? 'Unable to update todo.');
     }
 
-    return data.data as Todo;
+    return normalizeTodo(data.data as Todo & { recurrence?: unknown });
   },
 
   async deleteTodo(id: string): Promise<void> {

@@ -12,6 +12,22 @@ const parseError = (err: unknown): { status: number; code: string; message: stri
   return { status: 500, code: 'INTERNAL_ERROR', message: 'Unknown error' };
 };
 
+const parseRecurrence = (value: unknown): unknown => {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+};
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -45,7 +61,12 @@ Deno.serve(async (req: Request) => {
       throw { status: 500, code: 'DB_ERROR', message: dbError.message };
     }
 
-    return success(todos);
+    const normalizedTodos = (todos ?? []).map((todo) => ({
+      ...todo,
+      recurrence: parseRecurrence(todo.recurrence),
+    }));
+
+    return success(normalizedTodos);
   } catch (err: unknown) {
     const appError = parseError(err);
     return error(appError.code, appError.message, appError.status);

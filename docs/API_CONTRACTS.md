@@ -255,6 +255,12 @@ Request body:
   due_date?: string                      // ISO date string 'YYYY-MM-DD'
   reminder_at?: string                   // ISO datetime string
   reminder_channel?: 'push' | 'email' | 'both'  // default 'push'
+  recurrence?: {
+    type: 'daily' | 'weekly'
+    times: string[]                      // HH:mm, multiple allowed
+    weekdays?: Array<'mon'|'tue'|'wed'|'thu'|'fri'|'sat'|'sun'> // weekly only
+    completion_mode?: 'occurrence' | 'series'
+  } | null
 }
 ```
 
@@ -271,6 +277,12 @@ Response `data`:
   reminder_at: string | null
   reminder_channel: string | null
   reminder_sent: boolean
+  recurrence: {
+    type: 'daily' | 'weekly'
+    times: string[]
+    weekdays?: Array<'mon'|'tue'|'wed'|'thu'|'fri'|'sat'|'sun'>
+    completion_mode?: 'occurrence' | 'series'
+  } | null
   created_at: string
   updated_at: string
 }
@@ -292,6 +304,12 @@ Request body:
   due_date?: string | null
   reminder_at?: string | null
   reminder_channel?: 'push' | 'email' | 'both' | null
+  recurrence?: {
+    type: 'daily' | 'weekly'
+    times: string[]
+    weekdays?: Array<'mon'|'tue'|'wed'|'thu'|'fri'|'sat'|'sun'>
+    completion_mode?: 'occurrence' | 'series'
+  } | null
 }
 ```
 
@@ -333,6 +351,12 @@ Array<{
   priority: 'low' | 'medium' | 'high'
   due_date: string | null
   reminder_at: string | null
+  recurrence: {
+    type: 'daily' | 'weekly'
+    times: string[]
+    weekdays?: Array<'mon'|'tue'|'wed'|'thu'|'fri'|'sat'|'sun'>
+    completion_mode?: 'occurrence' | 'series'
+  } | null
   created_at: string
 }>
 ```

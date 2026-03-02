@@ -2,7 +2,11 @@ import { Alert } from 'react-native';
 import { create } from 'zustand';
 import { isBefore, isToday, startOfDay } from 'date-fns';
 import type { CreateTodoPayload, Todo, UpdateTodoPayload } from '@memora/shared';
-import { cancelReminderNotification, scheduleReminderNotification } from '@/hooks/use-notifications';
+import {
+  cancelReminderNotifications,
+  clearScheduledTodoNotifications,
+  scheduleReminderNotifications,
+} from '@/hooks/use-notifications';
 import { todoService } from '@/services/todo.service';
 
 export type TodoTabFilter = 'all' | 'today' | 'high_priority';
@@ -18,7 +22,7 @@ interface TodoStore {
   todos: Todo[];
   isLoading: boolean;
   filter: TodoTabFilter;
-  notificationIds: Record<string, string>;
+  notificationIds: Record<string, string[]>;
   lastFetchedAt: number | null;
   setFilter: (filter: TodoTabFilter) => void;
   fetchTodos: (force?: boolean) => Promise<void>;
@@ -34,6 +38,29 @@ const sortByDueDate = (a: Todo, b: Todo): number => {
   if (!a.due_date) return 1;
   if (!b.due_date) return -1;
   return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+};
+
+const weekdayByIndex: ('sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat')[] = [
+  'sun',
+  'mon',
+  'tue',
+  'wed',
+  'thu',
+  'fri',
+  'sat',
+];
+
+const isRecurringToday = (todo: Todo): boolean => {
+  if (!todo.recurrence) {
+    return false;
+  }
+
+  if (todo.recurrence.type === 'daily') {
+    return true;
+  }
+
+  const today = weekdayByIndex[new Date().getDay()];
+  return (todo.recurrence.weekdays ?? []).includes(today);
 };
 
 export const useTodoStore = create<TodoStore>((set, get) => ({
@@ -56,7 +83,23 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
 
       set({ isLoading: true });
       const fetchedTodos = await todoService.getTodos({ isCompleted: false });
-      set({ todos: fetchedTodos, isLoading: false, lastFetchedAt: Date.now() });
+      await clearScheduledTodoNotifications();
+
+      const nextNotificationEntries = await Promise.all(
+        fetchedTodos.map(async (todo) => {
+          const ids = await scheduleReminderNotifications(todo);
+          return [todo.id, ids] as const;
+        }),
+      );
+
+      const notificationIds = nextNotificationEntries.reduce<Record<string, string[]>>((acc, [todoId, ids]) => {
+        if (ids.length) {
+          acc[todoId] = ids;
+        }
+        return acc;
+      }, {});
+
+      set({ todos: fetchedTodos, isLoading: false, lastFetchedAt: Date.now(), notificationIds });
     } catch (err: unknown) {
       set({ isLoading: false });
       const message = err instanceof Error ? err.message : 'Failed to load todos.';
@@ -67,12 +110,14 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   createTodo: async (payload) => {
     try {
       const todo = await todoService.createTodo(payload);
-      const notificationId = await scheduleReminderNotification(todo);
+      const notificationIds = await scheduleReminderNotifications(todo);
 
       set((state) => ({
         todos: [todo, ...state.todos],
         lastFetchedAt: Date.now(),
-        notificationIds: notificationId ? { ...state.notificationIds, [todo.id]: notificationId } : state.notificationIds,
+        notificationIds: notificationIds.length
+          ? { ...state.notificationIds, [todo.id]: notificationIds }
+          : state.notificationIds,
       }));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to create todo.';
@@ -83,18 +128,18 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   updateTodo: async (payload) => {
     try {
       const todo = await todoService.updateTodo(payload);
-      const oldNotificationId = get().notificationIds[todo.id];
+      const oldNotificationIds = get().notificationIds[todo.id] ?? [];
 
-      if (oldNotificationId) {
-        await cancelReminderNotification(oldNotificationId);
+      if (oldNotificationIds.length) {
+        await cancelReminderNotifications(oldNotificationIds);
       }
 
-      const notificationId = await scheduleReminderNotification(todo);
+      const notificationIds = await scheduleReminderNotifications(todo);
 
       set((state) => {
         const nextIds = { ...state.notificationIds };
-        if (notificationId) {
-          nextIds[todo.id] = notificationId;
+        if (notificationIds.length) {
+          nextIds[todo.id] = notificationIds;
         } else {
           delete nextIds[todo.id];
         }
@@ -114,9 +159,9 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   deleteTodo: async (id) => {
     try {
       await todoService.deleteTodo(id);
-      const notificationId = get().notificationIds[id];
-      if (notificationId) {
-        await cancelReminderNotification(notificationId);
+      const notificationIds = get().notificationIds[id] ?? [];
+      if (notificationIds.length) {
+        await cancelReminderNotifications(notificationIds);
       }
 
       set((state) => {
@@ -135,6 +180,32 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   },
 
   toggleComplete: async (todo) => {
+    if (todo.recurrence && todo.recurrence.completion_mode !== 'series' && !todo.is_completed) {
+      const existingNotifications = get().notificationIds[todo.id] ?? [];
+      if (existingNotifications.length) {
+        await cancelReminderNotifications(existingNotifications);
+      }
+
+      const nextNotificationIds = await scheduleReminderNotifications(todo);
+      if (nextNotificationIds.length) {
+        await cancelReminderNotifications([nextNotificationIds[0]]);
+      }
+
+      const keptIds = nextNotificationIds.slice(1);
+      set((state) => {
+        const nextIds = { ...state.notificationIds };
+        if (keptIds.length) {
+          nextIds[todo.id] = keptIds;
+        } else {
+          delete nextIds[todo.id];
+        }
+
+        return { notificationIds: nextIds };
+      });
+
+      return;
+    }
+
     const previousTodos = get().todos;
     const optimisticTodo = { ...todo, is_completed: !todo.is_completed };
 
@@ -144,16 +215,16 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
 
     try {
       const updatedTodo = await todoService.updateTodo({ id: todo.id, is_completed: optimisticTodo.is_completed });
-      const notificationId = get().notificationIds[todo.id];
-      if (notificationId) {
-        await cancelReminderNotification(notificationId);
+      const notificationIds = get().notificationIds[todo.id] ?? [];
+      if (notificationIds.length) {
+        await cancelReminderNotifications(notificationIds);
       }
-      const nextNotificationId = await scheduleReminderNotification(updatedTodo);
+      const nextNotificationIds = await scheduleReminderNotifications(updatedTodo);
 
       set((state) => {
         const nextIds = { ...state.notificationIds };
-        if (nextNotificationId) {
-          nextIds[todo.id] = nextNotificationId;
+        if (nextNotificationIds.length) {
+          nextIds[todo.id] = nextNotificationIds;
         } else {
           delete nextIds[todo.id];
         }
@@ -183,7 +254,7 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       if (filter === 'today') {
         const dueToday = todo.due_date ? isToday(new Date(todo.due_date)) : false;
         const reminderToday = todo.reminder_at ? isToday(new Date(todo.reminder_at)) : false;
-        return dueToday || reminderToday;
+        return dueToday || reminderToday || isRecurringToday(todo);
       }
 
       return true;
@@ -195,9 +266,24 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       overdue: filteredTodos
         .filter((todo) => todo.due_date && isBefore(new Date(todo.due_date), todayStart))
         .sort(sortByDueDate),
-      today: filteredTodos.filter((todo) => todo.due_date && isToday(new Date(todo.due_date))).sort(sortByDueDate),
+      today: filteredTodos
+        .filter(
+          (todo) =>
+            (todo.due_date && isToday(new Date(todo.due_date))) ||
+            (todo.reminder_at && isToday(new Date(todo.reminder_at))) ||
+            isRecurringToday(todo),
+        )
+        .sort(sortByDueDate),
       upcoming: filteredTodos
-        .filter((todo) => !todo.due_date || (!isToday(new Date(todo.due_date)) && new Date(todo.due_date) > todayStart))
+        .filter(
+          (todo) =>
+            !(
+              (todo.due_date && isToday(new Date(todo.due_date))) ||
+              (todo.reminder_at && isToday(new Date(todo.reminder_at))) ||
+              isRecurringToday(todo)
+            ) &&
+            (!todo.due_date || (!isToday(new Date(todo.due_date)) && new Date(todo.due_date) > todayStart)),
+        )
         .sort(sortByDueDate),
     };
   },

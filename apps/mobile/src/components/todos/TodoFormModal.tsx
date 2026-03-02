@@ -19,8 +19,12 @@ import {
   Spacing,
   Typography,
   type Priority,
+  type RecurrenceCompletionMode,
+  type RecurrenceType,
+  type RecurrenceWeekday,
   type ReminderChannel,
   type Todo,
+  type TodoRecurrence,
 } from "@memora/shared";
 import { ReminderPicker } from "@/components/todos/ReminderPicker";
 
@@ -35,11 +39,34 @@ interface TodoFormModalProps {
     due_date?: string | null;
     reminder_at?: string | null;
     reminder_channel?: ReminderChannel | null;
+    recurrence?: TodoRecurrence | null;
   }) => void;
   initialTodo?: Todo | null;
 }
 
 const priorities: Priority[] = ["low", "medium", "high"];
+type RecurrenceSelection = "none" | RecurrenceType;
+const recurrenceTypes: RecurrenceSelection[] = ["none", "daily", "weekly"];
+const completionModes: RecurrenceCompletionMode[] = ["occurrence", "series"];
+const weekdays: RecurrenceWeekday[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+const toTitleCase = (value: string): string => `${value[0].toUpperCase()}${value.slice(1)}`;
+
+const toTimeParts = (value: string): { hours: number; minutes: number } | null => {
+  const [hoursRaw, minutesRaw] = value.split(":");
+  const hours = Number(hoursRaw);
+  const minutes = Number(minutesRaw);
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return null;
+  }
+
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return null;
+  }
+
+  return { hours, minutes };
+};
 
 export function TodoFormModal({
   visible,
@@ -52,9 +79,14 @@ export function TodoFormModal({
   const [priority, setPriority] = useState<Priority>("medium");
   const [dueDate, setDueDate] = useState<Date | null>(null);
   const [showDuePicker, setShowDuePicker] = useState(false);
+  const [showRecurrenceTimePicker, setShowRecurrenceTimePicker] = useState(false);
   const [reminderAt, setReminderAt] = useState<string | null>(null);
   const [reminderChannel, setReminderChannel] =
     useState<ReminderChannel>("push");
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceSelection>("none");
+  const [recurrenceTimes, setRecurrenceTimes] = useState<string[]>([]);
+  const [recurrenceWeekdays, setRecurrenceWeekdays] = useState<RecurrenceWeekday[]>([]);
+  const [completionMode, setCompletionMode] = useState<RecurrenceCompletionMode>("occurrence");
   const [titleError, setTitleError] = useState<string | null>(null);
   const [reminderError, setReminderError] = useState<string | null>(null);
 
@@ -66,6 +98,10 @@ export function TodoFormModal({
     setDueDate(initialTodo?.due_date ? new Date(initialTodo.due_date) : null);
     setReminderAt(initialTodo?.reminder_at ?? null);
     setReminderChannel(initialTodo?.reminder_channel ?? "push");
+    setRecurrenceType(initialTodo?.recurrence?.type ?? "none");
+    setRecurrenceTimes(initialTodo?.recurrence?.times ?? []);
+    setRecurrenceWeekdays(initialTodo?.recurrence?.weekdays ?? []);
+    setCompletionMode(initialTodo?.recurrence?.completion_mode ?? "occurrence");
     setTitleError(null);
     setReminderError(null);
   }, [visible, initialTodo]);
@@ -88,10 +124,30 @@ export function TodoFormModal({
       return;
     }
 
-    if (reminderAt && new Date(reminderAt) <= new Date()) {
+    if (recurrenceType === "none" && reminderAt && new Date(reminderAt) <= new Date()) {
       setReminderError("Reminder must be in the future.");
       return;
     }
+
+    if (recurrenceType !== "none" && recurrenceTimes.length === 0) {
+      setReminderError("Add at least one reminder time for recurrence.");
+      return;
+    }
+
+    if (recurrenceType === "weekly" && recurrenceWeekdays.length === 0) {
+      setReminderError("Pick at least one weekday for weekly recurrence.");
+      return;
+    }
+
+    const recurrence: TodoRecurrence | null =
+      recurrenceType === "none"
+        ? null
+        : {
+            type: recurrenceType,
+            times: recurrenceTimes,
+            weekdays: recurrenceType === "weekly" ? recurrenceWeekdays : undefined,
+            completion_mode: completionMode,
+          };
 
     onSave({
       id: initialTodo?.id,
@@ -99,10 +155,37 @@ export function TodoFormModal({
       description: description.trim() || undefined,
       priority,
       due_date: dueDate ? format(dueDate, "yyyy-MM-dd") : null,
-      reminder_at: reminderAt,
-      reminder_channel: reminderAt ? reminderChannel : null,
+      reminder_at: recurrence ? null : reminderAt,
+      reminder_channel: reminderChannel,
+      recurrence,
     });
     onClose();
+  };
+
+  const addRecurrenceTime = (time: string) => {
+    if (!toTimeParts(time)) {
+      return;
+    }
+
+    setRecurrenceTimes((current) =>
+      current.includes(time)
+        ? current
+        : [...current, time].sort((left, right) => left.localeCompare(right)),
+    );
+    setReminderError(null);
+  };
+
+  const removeRecurrenceTime = (time: string) => {
+    setRecurrenceTimes((current) => current.filter((entry) => entry !== time));
+  };
+
+  const handleRecurrenceTimeChange = (_event: DateTimePickerEvent, value?: Date) => {
+    setShowRecurrenceTimePicker(false);
+    if (!value) {
+      return;
+    }
+
+    addRecurrenceTime(format(value, "HH:mm"));
   };
 
   return (
@@ -248,6 +331,134 @@ export function TodoFormModal({
               ) : null}
             </View>
 
+            <View style={styles.field}>
+              <Text style={styles.label}>Repeat</Text>
+              <View style={styles.segment}>
+                {recurrenceTypes.map((entry) => (
+                  <Pressable
+                    accessibilityLabel={`Repeat ${entry}`}
+                    key={entry}
+                    onPress={() => {
+                      setRecurrenceType(entry);
+                      setReminderError(null);
+                    }}
+                    style={[
+                      styles.segmentButton,
+                      entry === recurrenceType ? styles.segmentButtonActive : undefined,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        entry === recurrenceType ? styles.segmentTextActive : undefined,
+                      ]}
+                    >
+                      {toTitleCase(entry)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            {recurrenceType !== "none" ? (
+              <>
+                <View style={styles.field}>
+                  <Text style={styles.label}>Reminder Times</Text>
+                  <View style={styles.chipsWrap}>
+                    {recurrenceTimes.map((time) => (
+                      <Pressable
+                        accessibilityLabel={`Remove time ${time}`}
+                        key={time}
+                        onPress={() => removeRecurrenceTime(time)}
+                        style={styles.timeChip}
+                      >
+                        <Text style={styles.timeChipText}>{time}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                  {Platform.OS === "web" ? (
+                    <View style={[styles.metaButton, { paddingVertical: 0 }]}> 
+                      <input
+                        aria-label="Add recurrence time"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val) {
+                            addRecurrenceTime(val);
+                          }
+                        }}
+                        style={{
+                          backgroundColor: "transparent",
+                          border: "none",
+                          color: Colors.textPrimary,
+                          fontFamily: "inherit",
+                          fontSize: Typography.size.md,
+                          outline: "none",
+                          padding: Spacing.sm,
+                          width: "100%",
+                        }}
+                        type="time"
+                      />
+                    </View>
+                  ) : (
+                    <Pressable
+                      accessibilityLabel="Add recurrence time"
+                      onPress={() => setShowRecurrenceTimePicker(true)}
+                      style={styles.metaButton}
+                    >
+                      <Text style={styles.metaText}>Add time</Text>
+                    </Pressable>
+                  )}
+                </View>
+
+                {recurrenceType === "weekly" ? (
+                  <View style={styles.field}>
+                    <Text style={styles.label}>Weekdays</Text>
+                    <View style={styles.segment}>
+                      {weekdays.map((day) => {
+                        const active = recurrenceWeekdays.includes(day);
+                        return (
+                          <Pressable
+                            accessibilityLabel={`Toggle weekday ${day}`}
+                            key={day}
+                            onPress={() => {
+                              setRecurrenceWeekdays((current) =>
+                                active
+                                  ? current.filter((entry) => entry !== day)
+                                  : [...current, day],
+                              );
+                            }}
+                            style={[styles.segmentButton, active ? styles.segmentButtonActive : undefined]}
+                          >
+                            <Text style={[styles.segmentText, active ? styles.segmentTextActive : undefined]}>
+                              {day.toUpperCase()}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  </View>
+                ) : null}
+
+                <View style={styles.field}>
+                  <Text style={styles.label}>When completed</Text>
+                  <View style={styles.segment}>
+                    {completionModes.map((mode) => (
+                      <Pressable
+                        accessibilityLabel={`Completion mode ${mode}`}
+                        key={mode}
+                        onPress={() => setCompletionMode(mode)}
+                        style={[styles.segmentButton, completionMode === mode ? styles.segmentButtonActive : undefined]}
+                      >
+                        <Text style={[styles.segmentText, completionMode === mode ? styles.segmentTextActive : undefined]}>
+                          {mode === "occurrence" ? "This occurrence" : "Entire series"}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              </>
+            ) : null}
+
             <Pressable
               accessibilityLabel="Save todo"
               onPress={handleSubmit}
@@ -262,6 +473,13 @@ export function TodoFormModal({
               mode="date"
               onChange={handleDueDateChange}
               value={dueDate ?? new Date()}
+            />
+          ) : null}
+          {showRecurrenceTimePicker ? (
+            <DateTimePicker
+              mode="time"
+              onChange={handleRecurrenceTimeChange}
+              value={new Date()}
             />
           ) : null}
         </Pressable>
@@ -350,6 +568,22 @@ const styles = StyleSheet.create({
   clearButton: { paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs },
   clearButtonText: {
     color: Colors.error,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.medium,
+  },
+  chipsWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.xs,
+  },
+  timeChip: {
+    backgroundColor: Colors.primaryLight,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  timeChipText: {
+    color: Colors.primaryDark,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.medium,
   },

@@ -27,6 +27,19 @@ const priorityColorMap: Record<Priority, string> = {
   high: Colors.priorityHigh,
 };
 
+const recurrenceLabel = (todo: Todo): string | null => {
+  if (!todo.recurrence) {
+    return null;
+  }
+
+  if (todo.recurrence.type === 'daily') {
+    return `Daily · ${todo.recurrence.times.join(', ')}`;
+  }
+
+  const days = (todo.recurrence.weekdays ?? []).map((entry) => entry.toUpperCase()).join(', ');
+  return `Weekly (${days}) · ${todo.recurrence.times.join(', ')}`;
+};
+
 export function TodoItem({
   todo,
   onToggleComplete,
@@ -44,6 +57,7 @@ export function TodoItem({
     priorityOrder[
       (priorityOrder.indexOf(todo.priority) + 1) % priorityOrder.length
     ];
+  const recurrence = recurrenceLabel(todo);
 
   return (
     <Pressable
@@ -97,6 +111,12 @@ export function TodoItem({
         {todo.description ? (
           <Text numberOfLines={1} style={styles.description}>
             {todo.description}
+          </Text>
+        ) : null}
+
+        {recurrence ? (
+          <Text numberOfLines={1} style={styles.recurrenceText}>
+            {recurrence}
           </Text>
         ) : null}
 
@@ -199,6 +219,11 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: Typography.size.md,
     marginTop: 2,
+  },
+  recurrenceText: {
+    color: Colors.primaryDark,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.medium,
   },
   metaRow: {
     alignItems: "center",

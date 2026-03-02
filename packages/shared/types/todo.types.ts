@@ -1,5 +1,15 @@
 export type Priority = 'low' | 'medium' | 'high';
 export type ReminderChannel = 'push' | 'email' | 'both';
+export type RecurrenceType = 'daily' | 'weekly';
+export type RecurrenceWeekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+export type RecurrenceCompletionMode = 'occurrence' | 'series';
+
+export interface TodoRecurrence {
+  type: RecurrenceType;
+  times: string[];
+  weekdays?: RecurrenceWeekday[];
+  completion_mode?: RecurrenceCompletionMode;
+}
 
 export interface Todo {
   id: string;
@@ -12,6 +22,7 @@ export interface Todo {
   reminder_at: string | null;
   reminder_channel: ReminderChannel | null;
   reminder_sent: boolean;
+  recurrence: TodoRecurrence | null;
   created_at: string;
   updated_at: string;
 }
@@ -23,6 +34,7 @@ export interface CreateTodoPayload {
   due_date?: string;
   reminder_at?: string;
   reminder_channel?: ReminderChannel;
+  recurrence?: TodoRecurrence | null;
 }
 
 export interface UpdateTodoPayload {
@@ -34,6 +46,7 @@ export interface UpdateTodoPayload {
   due_date?: string | null;
   reminder_at?: string | null;
   reminder_channel?: ReminderChannel | null;
+  recurrence?: TodoRecurrence | null;
 }
 
 export interface DeleteTodoPayload {
