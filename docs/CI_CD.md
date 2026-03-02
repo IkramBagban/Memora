@@ -1,38 +1,43 @@
 # CI/CD
 
-This repository uses GitHub Actions for CI and CD to Expo.
+This repository uses GitHub Actions for CI and CD to Expo (OTA updates) and EAS Android APK builds.
 
 ## Workflow
 
-File: `.github/workflows/expo-ci-cd.yml`
+File: .github/workflows/expo-ci-cd.yml
 
-- **CI (all PRs to `main`, and pushes to `main`)**
-  - Installs dependencies with `npm ci`
-  - Runs `npm run lint`
-  - Runs `npm run typecheck`
+- CI (all PRs to main, and pushes to main)
+  - Installs dependencies with npm install
+  - Runs npm run lint
+  - Runs npm run typecheck
 
-- **CD (push to `main` and manual dispatch)**
+- CD - OTA Update (push to main and manual dispatch)
   - Runs after CI passes
-  - Authenticates with Expo using `EXPO_TOKEN`
-  - Publishes an OTA update using EAS:
-    - `eas update --branch production --non-interactive`
+  - Authenticates with Expo using EXPO_TOKEN
+  - Publishes OTA update:
+    - npx eas update --branch production --non-interactive
+
+- CD - Android APK Build (push to main and manual dispatch)
+  - Runs after CI passes
+  - Triggers EAS Android preview build profile (APK)
+  - Writes latest build details link in GitHub Actions Step Summary
 
 ## Required GitHub Secrets
 
-Add these in your GitHub repository settings:
+Add these in repository settings:
 
-- `EXPO_TOKEN`
-- `EXPO_PUBLIC_SUPABASE_URL`
-- `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+- EXPO_TOKEN
+- EXPO_PUBLIC_SUPABASE_URL
+- EXPO_PUBLIC_SUPABASE_ANON_KEY
 
 ## How to create EXPO_TOKEN
 
-1. Sign in to Expo locally: `npx expo login`
-2. Create token: `npx expo token:create`
-3. Copy token value into GitHub secret `EXPO_TOKEN`
+1. Sign in locally: npx expo login
+2. Create token: npx expo token:create
+3. Save token as EXPO_TOKEN in GitHub secrets
 
-## Notes
+## Important
 
-- This CD pipeline publishes **OTA updates** to Expo branch `production`.
-- App binaries are not built/submitted in this workflow.
-- If you need store build/release automation too, add EAS build + submit jobs.
+- Expo Go uses OTA updates (no APK install needed).
+- APK installs come from EAS Build internal/preview builds.
+- If you want direct APK installs for users, use the EAS build link from workflow summary.
