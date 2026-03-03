@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -13,6 +13,28 @@ import {
   Typography,
 } from "@memora/shared";
 
+const QUICK_OFFSETS: { label: string; seconds: number }[] = [
+  { label: "30s", seconds: 30 },
+  { label: "5m", seconds: 5 * 60 },
+  { label: "15m", seconds: 15 * 60 },
+  { label: "30m", seconds: 30 * 60 },
+  { label: "1h", seconds: 60 * 60 },
+  { label: "3h", seconds: 3 * 60 * 60 },
+  { label: "1d", seconds: 24 * 60 * 60 },
+];
+
+type TimeUnit = "s" | "m" | "h" | "d";
+
+const TIME_UNITS: { label: string; unit: TimeUnit; multiplier: number }[] = [
+  { label: "sec", unit: "s", multiplier: 1 },
+  { label: "min", unit: "m", multiplier: 60 },
+  { label: "hr", unit: "h", multiplier: 3600 },
+  { label: "day", unit: "d", multiplier: 86400 },
+];
+
+const DEFAULT_CUSTOM_AMOUNT = "5";
+const DEFAULT_CUSTOM_UNIT: TimeUnit = "m";
+
 interface ReminderPickerProps {
   reminderAt: string | null;
   onChange: (value: { reminderAt: string | null }) => void;
@@ -25,8 +47,28 @@ export function ReminderPicker({
   const [expanded, setExpanded] = useState(Boolean(reminderAt));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [customAmount, setCustomAmount] = useState(DEFAULT_CUSTOM_AMOUNT);
+  const [customUnit, setCustomUnit] = useState<TimeUnit>(DEFAULT_CUSTOM_UNIT);
+  const [customError, setCustomError] = useState<string | null>(null);
 
   const reminderDate = reminderAt ? new Date(reminderAt) : new Date();
+
+  const applyOffset = (seconds: number) => {
+    const target = new Date(Date.now() + seconds * 1000);
+    onChange({ reminderAt: target.toISOString(), reminderChannel });
+  };
+
+  const applyCustomOffset = () => {
+    const amount = parseInt(customAmount, 10);
+    if (isNaN(amount) || amount <= 0) {
+      setCustomError("Enter a number greater than 0.");
+      return;
+    }
+    const unit = TIME_UNITS.find((u) => u.unit === customUnit);
+    if (!unit) return;
+    setCustomError(null);
+    applyOffset(amount * unit.multiplier);
+  };
 
   const handleDateChange = (_event: DateTimePickerEvent, value?: Date) => {
     setShowDatePicker(false);
@@ -87,6 +129,71 @@ export function ReminderPicker({
 
       {expanded && reminderAt ? (
         <View style={styles.content}>
+          {/* Quick picks */}
+          <Text style={styles.sectionLabel}>Quick</Text>
+          <View style={styles.quickRow}>
+            {QUICK_OFFSETS.map(({ label, seconds }) => (
+              <Pressable
+                accessibilityLabel={`Remind in ${label}`}
+                key={label}
+                onPress={() => applyOffset(seconds)}
+                style={styles.quickChip}
+              >
+                <Text style={styles.quickChipText}>{label}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Custom interval */}
+          <View style={styles.customRow}>
+            <Text style={styles.customInLabel}>In</Text>
+            <TextInput
+              accessibilityLabel="Custom reminder amount"
+              keyboardType="numeric"
+              maxLength={4}
+              onChangeText={(v) => {
+                setCustomAmount(v);
+                setCustomError(null);
+              }}
+              style={styles.customAmountInput}
+              value={customAmount}
+            />
+            <View style={styles.unitRow}>
+              {TIME_UNITS.map(({ label, unit }) => (
+                <Pressable
+                  accessibilityLabel={`Time unit ${label}`}
+                  key={unit}
+                  onPress={() => setCustomUnit(unit)}
+                  style={[
+                    styles.unitButton,
+                    customUnit === unit && styles.unitButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.unitText,
+                      customUnit === unit && styles.unitTextActive,
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <Pressable
+              accessibilityLabel="Set custom reminder"
+              onPress={applyCustomOffset}
+              style={styles.setButton}
+            >
+              <Text style={styles.setButtonText}>Set</Text>
+            </Pressable>
+          </View>
+          {customError ? (
+            <Text style={styles.customError}>{customError}</Text>
+          ) : null}
+
+          {/* Specific date/time */}
+          <Text style={styles.sectionLabel}>Specific</Text>
           <View style={styles.row}>
             {Platform.OS === "web" ? (
               <View style={[styles.metaButton, { padding: 0 }]}>
@@ -252,4 +359,103 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.medium,
   },
+  segment: {
+    backgroundColor: Colors.background,
+    borderRadius: Radius.full,
+    flexDirection: "row",
+    marginTop: Spacing.sm,
+    padding: Spacing.xs,
+  },
+  segmentButton: {
+    alignItems: "center",
+    borderRadius: Radius.full,
+    flex: 1,
+    paddingVertical: Spacing.xs,
+  },
+  segmentButtonActive: { backgroundColor: Colors.primaryDark },
+  segmentText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.medium,
+  },
+  segmentTextActive: { color: Colors.textInverse },
+  sectionLabel: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+    marginTop: Spacing.xs,
+  },
+  quickRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.xs,
+  },
+  quickChip: {
+    backgroundColor: Colors.primaryLight,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  quickChipText: {
+    color: Colors.primaryDark,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+  },
+  customRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.xs,
+    marginTop: Spacing.xs,
+  },
+  customInLabel: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+  },
+  customAmountInput: {
+    backgroundColor: Colors.background,
+    borderColor: Colors.border,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    color: Colors.textPrimary,
+    fontSize: Typography.size.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    textAlign: "center",
+    width: 52,
+  },
+  unitRow: {
+    flexDirection: "row",
+    gap: 2,
+  },
+  unitButton: {
+    backgroundColor: Colors.background,
+    borderColor: Colors.border,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: Spacing.xs,
+  },
+  unitButtonActive: {
+    backgroundColor: Colors.primaryDark,
+    borderColor: Colors.primaryDark,
+  },
+  unitText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.medium,
+  },
+  unitTextActive: { color: Colors.textInverse },
+  setButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  setButtonText: {
+    color: Colors.textInverse,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+  },
+  customError: { color: Colors.error, fontSize: Typography.size.sm },
 });
