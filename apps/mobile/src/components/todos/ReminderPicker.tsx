@@ -55,7 +55,7 @@ export function ReminderPicker({
 
   const applyOffset = (seconds: number) => {
     const target = new Date(Date.now() + seconds * 1000);
-    onChange({ reminderAt: target.toISOString(), reminderChannel });
+    onChange({ reminderAt: target.toISOString() });
   };
 
   const applyCustomOffset = () => {

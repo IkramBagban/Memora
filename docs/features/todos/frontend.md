@@ -19,24 +19,28 @@ Todos in Memora are not a basic checklist. They're "things you want to remember 
 ```
 Header: "Todos"  [+ button top right]
 ─────────────────────
-Filter tabs: All | Today | High Priority
+Filter tabs: All | Today | High Priority | Done
 ─────────────────────
-Section: "Overdue" (red badge count) — if any overdue
+Section: "Overdue" (red badge count) — if any overdue [active tabs only]
   TodoItem ...
 Section: "Today"
   TodoItem ...
 Section: "Upcoming"
   TodoItem ...
+[OR if Done tab: "Completed" section with completed todos]
 ─────────────────────
 FAB: green + → opens CreateTodoModal
 ```
 
 **Filter tabs behavior:**
 - "All" — show all incomplete todos, grouped by overdue/today/upcoming
-- "Today" — only todos with due_date = today OR reminder_at = today
+- "Today" — only incomplete todos with due_date = today OR reminder_at = today
 - "High Priority" — only high priority incomplete todos
+- "Done" — show completed todos, sorted by most recently completed first
 
-**Empty state:** "Nothing to do! 🎉" with a subtle message. If filtered: "No todos in this view."
+**Empty state:** 
+- Active tabs: "Nothing to do! 🎉" with message
+- Done tab: "No completed tasks" with message
 
 ---
 

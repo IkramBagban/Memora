@@ -9,13 +9,14 @@ import {
 } from '@/hooks/use-notifications';
 import { todoService } from '@/services/todo.service';
 
-export type TodoTabFilter = 'all' | 'today' | 'high_priority';
+export type TodoTabFilter = 'all' | 'today' | 'high_priority' | 'done';
 const TODO_STALE_MS = 60_000;
 
 interface GroupedTodos {
   overdue: Todo[];
   today: Todo[];
   upcoming: Todo[];
+  completed: Todo[];
 }
 
 interface TodoStore {
@@ -82,11 +83,15 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       }
 
       set({ isLoading: true });
-      const fetchedTodos = await todoService.getTodos({ isCompleted: false });
+      // Fetch both active and completed todos
+      const activeTodos = await todoService.getTodos({ isCompleted: false });
+      const completedTodos = await todoService.getTodos({ isCompleted: true });
+      const fetchedTodos = [...activeTodos, ...completedTodos];
+      
       await clearScheduledTodoNotifications();
 
       const nextNotificationEntries = await Promise.all(
-        fetchedTodos.map(async (todo) => {
+        activeTodos.map(async (todo) => {
           const ids = await scheduleReminderNotifications(todo);
           return [todo.id, ids] as const;
         }),
@@ -244,6 +249,21 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
 
   getGroupedTodos: () => {
     const { todos, filter } = get();
+
+    // For "done" tab, show completed todos
+    if (filter === 'done') {
+      const completedTodos = todos.filter((todo) => todo.is_completed);
+      return {
+        overdue: [],
+        today: [],
+        upcoming: [],
+        completed: completedTodos.sort((a, b) => {
+          if (!a.updated_at || !b.updated_at) return 0;
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        }),
+      };
+    }
+
     const activeTodos = todos.filter((todo) => !todo.is_completed);
 
     const filteredTodos = activeTodos.filter((todo) => {
@@ -285,6 +305,7 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
             (!todo.due_date || (!isToday(new Date(todo.due_date)) && new Date(todo.due_date) > todayStart)),
         )
         .sort(sortByDueDate),
+      completed: [],
     };
   },
 }));

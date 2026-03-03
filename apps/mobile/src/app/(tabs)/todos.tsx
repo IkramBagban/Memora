@@ -35,6 +35,7 @@ const filters: { key: TodoTabFilter; label: string }[] = [
   { key: "all", label: "All" },
   { key: "today", label: "Today" },
   { key: "high_priority", label: "High Priority" },
+  { key: "done", label: "Done" },
 ];
 
 export default function TodosScreen() {
@@ -63,6 +64,23 @@ export default function TodosScreen() {
   const rows = useMemo<SectionRow[]>(() => {
     const nextRows: SectionRow[] = [];
 
+    // For "Done" tab, show completed todos differently
+    if (filter === "done") {
+      if (groupedTodos.completed.length) {
+        nextRows.push({
+          id: "header-completed",
+          type: "header",
+          label: "Completed",
+          count: groupedTodos.completed.length,
+        });
+        groupedTodos.completed.forEach((todo) =>
+          nextRows.push({ id: todo.id, type: "todo", todo }),
+        );
+      }
+      return nextRows;
+    }
+
+    // For active tabs, show by overdue/today/upcoming
     if (groupedTodos.overdue.length) {
       nextRows.push({
         id: "header-overdue",
@@ -100,7 +118,7 @@ export default function TodosScreen() {
     }
 
     return nextRows;
-  }, [groupedTodos]);
+  }, [groupedTodos, filter]);
 
   const handlePriorityCycle = useCallback(
     (todo: Todo, nextPriority: Priority) => {
@@ -192,14 +210,18 @@ export default function TodosScreen() {
             <View style={styles.emptyState}>
               <Ionicons
                 color={Colors.textSecondary}
-                name="checkmark-circle-outline"
+                name={filter === "done" ? "checkmark-circle" : "checkmark-circle-outline"}
                 size={48}
               />
-              <Text style={styles.emptyTitle}>Nothing to do! 🎉</Text>
+              <Text style={styles.emptyTitle}>
+                {filter === "done" ? "No completed tasks" : "Nothing to do! 🎉"}
+              </Text>
               <Text style={styles.emptyDescription}>
-                {filter === "all"
-                  ? "You're all caught up."
-                  : "No todos in this view."}
+                {filter === "done"
+                  ? "Your completed tasks will appear here."
+                  : filter === "all"
+                    ? "You're all caught up."
+                    : "No todos in this view."}
               </Text>
             </View>
           }
