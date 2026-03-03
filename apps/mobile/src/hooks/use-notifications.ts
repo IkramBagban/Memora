@@ -93,12 +93,12 @@ export const ensureNotificationPermission = async (): Promise<boolean> => {
 };
 
 export const scheduleReminderNotifications = async (todo: Todo): Promise<string[]> => {
-  if (todo.reminder_channel && !['push', 'both'].includes(todo.reminder_channel)) {
+  const hasPermission = await ensureNotificationPermission();
+  if (!hasPermission) {
     return [];
   }
 
-  const hasPermission = await ensureNotificationPermission();
-  if (!hasPermission) {
+  if (!todo.reminder_at || todo.is_completed) {
     return [];
   }
 

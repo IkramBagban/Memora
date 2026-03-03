@@ -7,7 +7,7 @@
 
 ## Overview
 
-Todo backend consists of 4 edge functions: create, update, delete, get. Plus the shared `send-notification` function for email reminders.
+Todo backend consists of 4 edge functions: create, update, delete, get. Reminders are tracked via the `reminder_sent` flag and a Supabase cron job marks them as sent when their scheduled time passes.
 
 ---
 
@@ -22,7 +22,6 @@ export const CreateTodoSchema = z.object({
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
   due_date: z.string().date().optional(),  // 'YYYY-MM-DD' format
   reminder_at: z.string().datetime({ offset: true }).optional(),
-  reminder_channel: z.enum(['push', 'email', 'both']).default('push'),
 }).refine(
   (data) => {
     // If reminder_at is set, it must be in the future
@@ -42,7 +41,6 @@ export const UpdateTodoSchema = z.object({
   priority: z.enum(['low', 'medium', 'high']).optional(),
   due_date: z.string().date().optional().nullable(),
   reminder_at: z.string().datetime({ offset: true }).optional().nullable(),
-  reminder_channel: z.enum(['push', 'email', 'both']).optional().nullable(),
 })
 
 export const GetTodosQuerySchema = z.object({
@@ -241,104 +239,26 @@ Deno.serve(async (req) => {
 
 ---
 
-## Email Reminder System
+## Push Notification System
 
-Email reminders are handled by a **Supabase Cron Job** (pg_cron) that runs every minute and finds todos where:
-- `reminder_at <= NOW()`
-- `reminder_sent = false`
-- `is_completed = false`
-- `reminder_channel IN ('email', 'both')`
+Push reminders are track via the `reminder_sent` flag. A **Supabase Cron Job** (pg_cron) runs every minute and marks todos as sent when their reminder time passes:
 
 ```sql
 -- Create the cron job in a migration
 SELECT cron.schedule(
-  'send-todo-reminders',
+  'update-todo-reminders-sent',
   '* * * * *',
   $$
-  SELECT
-    net.http_post(
-      url := 'https://<project-ref>.supabase.co/functions/v1/send-notification',
-      headers := '{"Authorization": "Bearer <service_role_key>", "Content-Type": "application/json"}'::jsonb,
-      body := json_build_object(
-        'user_id', user_id,
-        'type', 'todo_reminder',
-        'channel', 'email',
-        'payload', json_build_object(
-          'title', title,
-          'body', COALESCE(description, 'You have a reminder'),
-          'data', json_build_object('todoId', id)
-        )
-      )::jsonb
-    )
-  FROM todos
-  WHERE reminder_at <= NOW()
-    AND reminder_sent = FALSE
-    AND is_completed = FALSE
-    AND reminder_channel IN ('email', 'both');
-
-  -- Mark as sent
-  UPDATE todos
+  UPDATE public.todos
   SET reminder_sent = TRUE
   WHERE reminder_at <= NOW()
     AND reminder_sent = FALSE
-    AND is_completed = FALSE
-    AND reminder_channel IN ('email', 'both');
+    AND is_completed = FALSE;
   $$
 );
 ```
 
----
-
-### `send-notification/index.ts`
-
-Called by the cron job. Sends email via Resend.
-
-```ts
-import { Resend } from 'npm:resend'
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
-
-  try {
-    const body = await req.json()
-    // This function is internal — verify it's called with service role key
-    const authHeader = req.headers.get('Authorization')
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    if (!authHeader?.includes(serviceKey!)) {
-      throw { status: 401, code: 'UNAUTHORIZED', message: 'Internal only' }
-    }
-
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    )
-
-    // Get user email
-    const { data: { user } } = await supabase.auth.admin.getUserById(body.user_id)
-    if (!user?.email) throw { status: 404, code: 'NOT_FOUND', message: 'User not found' }
-
-    const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
-
-    await resend.emails.send({
-      from: 'Memora <reminders@yourdomain.com>',
-      to: user.email,
-      subject: `⏰ Reminder: ${body.payload.title}`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #22C55E;">Memora Reminder</h2>
-          <h3>${body.payload.title}</h3>
-          <p>${body.payload.body}</p>
-          <p style="color: #6B7280; font-size: 12px;">Open Memora to manage your todos.</p>
-        </div>
-      `,
-    })
-
-    return success({ sent: true })
-  } catch (err: any) {
-    return error(err.code ?? 'INTERNAL_ERROR', err.message ?? 'Unknown error', err.status ?? 500)
-  }
-})
-```
+The frontend handles displaying push notifications via the Expo Notifications SDK. In a future version, the `send-notification` edge function can integrate with Expo's push service to deliver remote notifications.
 
 ---
 

@@ -11,23 +11,15 @@ import {
   Shadow,
   Spacing,
   Typography,
-  type ReminderChannel,
 } from "@memora/shared";
 
 interface ReminderPickerProps {
   reminderAt: string | null;
-  reminderChannel: ReminderChannel;
-  onChange: (value: {
-    reminderAt: string | null;
-    reminderChannel: ReminderChannel;
-  }) => void;
+  onChange: (value: { reminderAt: string | null }) => void;
 }
-
-const channels: ReminderChannel[] = ["push", "email", "both"];
 
 export function ReminderPicker({
   reminderAt,
-  reminderChannel,
   onChange,
 }: ReminderPickerProps) {
   const [expanded, setExpanded] = useState(Boolean(reminderAt));
@@ -46,7 +38,7 @@ export function ReminderPicker({
       value.getMonth(),
       value.getDate(),
     );
-    onChange({ reminderAt: nextDate.toISOString(), reminderChannel });
+    onChange({ reminderAt: nextDate.toISOString() });
   };
 
   const handleTimeChange = (_event: DateTimePickerEvent, value?: Date) => {
@@ -55,7 +47,7 @@ export function ReminderPicker({
 
     const nextDate = new Date(reminderDate);
     nextDate.setHours(value.getHours(), value.getMinutes(), 0, 0);
-    onChange({ reminderAt: nextDate.toISOString(), reminderChannel });
+    onChange({ reminderAt: nextDate.toISOString() });
   };
 
   const summaryLabel = reminderAt
@@ -70,10 +62,10 @@ export function ReminderPicker({
           const nextExpanded = !expanded;
           setExpanded(nextExpanded);
           if (nextExpanded && !reminderAt) {
-            onChange({ reminderAt: new Date().toISOString(), reminderChannel });
+            onChange({ reminderAt: new Date().toISOString() });
           }
           if (!nextExpanded) {
-            onChange({ reminderAt: null, reminderChannel });
+            onChange({ reminderAt: null });
           }
         }}
         style={styles.trigger}
@@ -120,7 +112,6 @@ export function ReminderPicker({
                     );
                     onChange({
                       reminderAt: nextDate.toISOString(),
-                      reminderChannel,
                     });
                   }}
                   style={{
@@ -172,7 +163,6 @@ export function ReminderPicker({
                     nextDate.setHours(hours, minutes, 0, 0);
                     onChange({
                       reminderAt: nextDate.toISOString(),
-                      reminderChannel,
                     });
                   }}
                   style={{
@@ -202,31 +192,6 @@ export function ReminderPicker({
                 </Text>
               </Pressable>
             )}
-          </View>
-
-          <View style={styles.segment}>
-            {channels.map((channel) => (
-              <Pressable
-                accessibilityLabel={`Reminder channel ${channel}`}
-                key={channel}
-                onPress={() =>
-                  onChange({ reminderAt, reminderChannel: channel })
-                }
-                style={[
-                  styles.segmentButton,
-                  reminderChannel === channel && styles.segmentButtonActive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.segmentText,
-                    reminderChannel === channel && styles.segmentTextActive,
-                  ]}
-                >
-                  {channel.toUpperCase()}
-                </Text>
-              </Pressable>
-            ))}
           </View>
         </View>
       ) : null}
@@ -287,24 +252,4 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.medium,
   },
-  segment: {
-    backgroundColor: Colors.background,
-    borderRadius: Radius.full,
-    flexDirection: "row",
-    marginTop: Spacing.sm,
-    padding: Spacing.xs,
-  },
-  segmentButton: {
-    alignItems: "center",
-    borderRadius: Radius.full,
-    flex: 1,
-    paddingVertical: Spacing.xs,
-  },
-  segmentButtonActive: { backgroundColor: Colors.primaryDark },
-  segmentText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium,
-  },
-  segmentTextActive: { color: Colors.textInverse },
 });

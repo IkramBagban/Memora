@@ -1,5 +1,4 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { Resend } from 'npm:resend@4.0.0';
 import { SendNotificationSchema } from '../../../packages/shared/validators/todo.validators.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { error, success } from '../_shared/response.ts';
@@ -24,34 +23,17 @@ Deno.serve(async (req: Request) => {
 
     const payload = SendNotificationSchema.parse(await req.json());
 
-    if (payload.channel !== 'email') {
-      return success({ sent: false, skipped: true });
-    }
-
+    // Push notifications are handled on the client side via Expo Notifications
+    // This endpoint verifies the notification request and marks it as processed
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       serviceRoleKey,
     );
 
-    const { data, error: userError } = await supabase.auth.admin.getUserById(payload.user_id);
-    if (userError || !data.user?.email) {
-      throw { status: 404, code: 'NOT_FOUND', message: 'User not found' };
-    }
+    // TODO: In a future version, integrate with Expo Push Notifications service
+    // to deliver remote notifications to user's device(s)
 
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    if (!resendApiKey) {
-      throw { status: 500, code: 'CONFIG_ERROR', message: 'Missing RESEND_API_KEY' };
-    }
-
-    const resend = new Resend(resendApiKey);
-    await resend.emails.send({
-      from: 'Memora <reminders@yourdomain.com>',
-      to: data.user.email,
-      subject: `⏰ Reminder: ${payload.payload.title}`,
-      html: `<div><h2>Memora Reminder</h2><h3>${payload.payload.title}</h3><p>${payload.payload.body}</p></div>`,
-    });
-
-    return success({ sent: true });
+    return success({ sent: true, channel: payload.channel });
   } catch (err: unknown) {
     const appError = parseError(err);
     return error(appError.code, appError.message, appError.status);

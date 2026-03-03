@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS public.todos (
   is_completed BOOLEAN NOT NULL DEFAULT FALSE,
   priority TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
   reminder_at TIMESTAMPTZ,
-  reminder_channel TEXT CHECK (reminder_channel IN ('push', 'email', 'both')) DEFAULT 'push',
   reminder_sent BOOLEAN NOT NULL DEFAULT FALSE,
   recurrence TEXT,
   due_date DATE,
@@ -53,37 +52,13 @@ END
 $$;
 
 SELECT cron.schedule(
-  'send-todo-reminders',
+  'update-todo-reminders-sent',
   '* * * * *',
   $$
-  SELECT net.http_post(
-    url := CONCAT(current_setting('app.settings.supabase_url'), '/functions/v1/send-notification'),
-    headers := jsonb_build_object(
-      'Authorization', CONCAT('Bearer ', current_setting('app.settings.service_role_key')),
-      'Content-Type', 'application/json'
-    ),
-    body := jsonb_build_object(
-      'user_id', user_id,
-      'type', 'todo_reminder',
-      'channel', 'email',
-      'payload', jsonb_build_object(
-        'title', title,
-        'body', COALESCE(description, 'You have a reminder'),
-        'data', jsonb_build_object('todoId', id)
-      )
-    )
-  )
-  FROM public.todos
-  WHERE reminder_at <= NOW()
-    AND reminder_sent = FALSE
-    AND is_completed = FALSE
-    AND reminder_channel IN ('email', 'both');
-
   UPDATE public.todos
   SET reminder_sent = TRUE
   WHERE reminder_at <= NOW()
     AND reminder_sent = FALSE
-    AND is_completed = FALSE
-    AND reminder_channel IN ('email', 'both');
+    AND is_completed = FALSE;
   $$
 );

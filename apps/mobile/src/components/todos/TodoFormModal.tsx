@@ -22,7 +22,6 @@ import {
   type RecurrenceCompletionMode,
   type RecurrenceType,
   type RecurrenceWeekday,
-  type ReminderChannel,
   type Todo,
   type TodoRecurrence,
 } from "@memora/shared";
@@ -38,7 +37,6 @@ interface TodoFormModalProps {
     priority: Priority;
     due_date?: string | null;
     reminder_at?: string | null;
-    reminder_channel?: ReminderChannel | null;
     recurrence?: TodoRecurrence | null;
   }) => void;
   initialTodo?: Todo | null;
@@ -81,8 +79,6 @@ export function TodoFormModal({
   const [showDuePicker, setShowDuePicker] = useState(false);
   const [showRecurrenceTimePicker, setShowRecurrenceTimePicker] = useState(false);
   const [reminderAt, setReminderAt] = useState<string | null>(null);
-  const [reminderChannel, setReminderChannel] =
-    useState<ReminderChannel>("push");
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceSelection>("none");
   const [recurrenceTimes, setRecurrenceTimes] = useState<string[]>([]);
   const [recurrenceWeekdays, setRecurrenceWeekdays] = useState<RecurrenceWeekday[]>([]);
@@ -97,7 +93,6 @@ export function TodoFormModal({
     setPriority(initialTodo?.priority ?? "medium");
     setDueDate(initialTodo?.due_date ? new Date(initialTodo.due_date) : null);
     setReminderAt(initialTodo?.reminder_at ?? null);
-    setReminderChannel(initialTodo?.reminder_channel ?? "push");
     setRecurrenceType(initialTodo?.recurrence?.type ?? "none");
     setRecurrenceTimes(initialTodo?.recurrence?.times ?? []);
     setRecurrenceWeekdays(initialTodo?.recurrence?.weekdays ?? []);
@@ -156,7 +151,6 @@ export function TodoFormModal({
       priority,
       due_date: dueDate ? format(dueDate, "yyyy-MM-dd") : null,
       reminder_at: recurrence ? null : reminderAt,
-      reminder_channel: reminderChannel,
       recurrence,
     });
     onClose();
@@ -315,16 +309,11 @@ export function TodoFormModal({
 
             <View style={styles.field}>
               <ReminderPicker
-                onChange={({
-                  reminderAt: nextReminder,
-                  reminderChannel: nextChannel,
-                }) => {
+                onChange={({ reminderAt: nextReminder }) => {
                   setReminderAt(nextReminder);
-                  setReminderChannel(nextChannel);
                   setReminderError(null);
                 }}
                 reminderAt={reminderAt}
-                reminderChannel={reminderChannel}
               />
               {reminderError ? (
                 <Text style={styles.error}>{reminderError}</Text>

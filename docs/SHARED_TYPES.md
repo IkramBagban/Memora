@@ -84,7 +84,6 @@ export interface ReviewResult {
 
 ```ts
 export type Priority = 'low' | 'medium' | 'high'
-export type ReminderChannel = 'push' | 'email' | 'both'
 export type RecurrenceType = 'daily' | 'weekly'
 export type RecurrenceWeekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
 export type RecurrenceCompletionMode = 'occurrence' | 'series'
@@ -105,7 +104,6 @@ export interface Todo {
   priority: Priority
   due_date: string | null      // 'YYYY-MM-DD'
   reminder_at: string | null   // ISO datetime
-  reminder_channel: ReminderChannel | null
   reminder_sent: boolean
   recurrence: TodoRecurrence | null
   created_at: string
@@ -118,7 +116,6 @@ export interface CreateTodoPayload {
   priority?: Priority
   due_date?: string
   reminder_at?: string
-  reminder_channel?: ReminderChannel
   recurrence?: TodoRecurrence | null
 }
 
@@ -130,7 +127,6 @@ export interface UpdateTodoPayload {
   priority?: Priority
   due_date?: string | null
   reminder_at?: string | null
-  reminder_channel?: ReminderChannel | null
   recurrence?: TodoRecurrence | null
 }
 

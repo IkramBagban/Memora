@@ -95,7 +95,6 @@ Reminder
 [Toggle switch]
 [If ON, show:]
   Date & Time picker
-  Channel: Push | Email | Both
 
 ─────────
 [Save] button — full width green pill
@@ -123,7 +122,6 @@ Encapsulates all reminder-related fields:
 [Expanded:]
 Date: [Tue, 4 Feb 2025] ← tap to change
 Time: [9:00 AM] ← tap to change
-Notify via: [Push] [Email] [Both] ← segmented
 ```
 
 This is a self-contained component used in the todo form. It manages its own expanded/collapsed state and calls `onChange(reminderData)` when values change.
@@ -202,8 +200,6 @@ export async function cancelReminderNotification(notificationId: string): Promis
 **Important:** Store the `notificationId` returned by Expo alongside the todo in local state (or AsyncStorage keyed by `todo.id`) so you can cancel it when the todo is completed or reminder is changed.
 
 **Notification permission request:** On first app open (after auth), request notification permissions in the root layout with a friendly explanation before showing the system prompt.
-
-**Email reminders:** When `reminder_channel` is 'email' or 'both', the backend handles this via a cron job that calls the `send-notification` edge function. Frontend just needs to save the channel preference — no extra action needed.
 
 ---
 

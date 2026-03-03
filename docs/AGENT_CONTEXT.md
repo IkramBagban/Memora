@@ -18,7 +18,7 @@
 | Mobile App | React Native (Expo SDK 51+) |
 | Backend | Supabase (Postgres + Edge Functions + Auth + Realtime) |
 | Shared Package | `/packages/shared` — types, constants, utils |
-| Notifications | Expo Notifications (push) + Supabase Edge Functions (email via Resend) |
+| Notifications | Expo Notifications (push) |
 | Algorithm | `ts-fsrs` for spaced repetition |
 | Validation | Zod (used in both edge functions and frontend) |
 | State Management | Zustand |
@@ -139,9 +139,7 @@ Every edge function MUST verify the JWT and extract `user_id`. A user can ONLY r
 
 ## Notification System
 
-Two channels:
-1. **Push Notifications** — Expo Notifications, scheduled locally for todos with reminders.
-2. **Email Notifications** — Supabase Edge Function `send-notification` calls Resend API for email reminders.
+Push notifications only. Expo Notifications SDK sends reminders to user devices. A Supabase cron job marks reminders as sent when their scheduled time passes.
 
 ---
 

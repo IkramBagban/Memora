@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 export const PrioritySchema = z.enum(['low', 'medium', 'high']);
-export const ReminderChannelSchema = z.enum(['push', 'email', 'both']);
 export const RecurrenceTypeSchema = z.enum(['daily', 'weekly']);
 export const RecurrenceWeekdaySchema = z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
 export const RecurrenceCompletionModeSchema = z.enum(['occurrence', 'series']);
@@ -39,7 +38,6 @@ export const CreateTodoSchema = z.object({
   priority: PrioritySchema.optional().default('medium'),
   due_date: z.string().date().optional(),
   reminder_at: z.string().datetime().optional(),
-  reminder_channel: ReminderChannelSchema.optional().default('push'),
   recurrence: TodoRecurrenceSchema.nullable().optional(),
 });
 
@@ -52,7 +50,6 @@ export const UpdateTodoSchema = z
     priority: PrioritySchema.optional(),
     due_date: z.string().date().nullable().optional(),
     reminder_at: z.string().datetime().nullable().optional(),
-    reminder_channel: ReminderChannelSchema.nullable().optional(),
     recurrence: TodoRecurrenceSchema.nullable().optional(),
   })
   .refine((value) => Object.keys(value).length > 1, { message: 'At least one update field is required.' });
@@ -74,7 +71,7 @@ export const GetTodosQuerySchema = z.object({
 export const SendNotificationSchema = z.object({
   user_id: z.string().uuid(),
   type: z.enum(['todo_reminder', 'daily_review']),
-  channel: z.enum(['email', 'push']),
+  channel: z.literal('push'),
   payload: z.object({
     title: z.string().min(1),
     body: z.string().min(1),
