@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import {
+  Alert,
   FlatList,
   Modal,
   Pressable,
@@ -30,10 +31,14 @@ import { MarkdownText } from "@/components/ui/MarkdownText";
 export default function DeckDetailScreen() {
   const router = useRouter();
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
-  const { decks, deckCards, fetchDeckCards, createCard } = useFlashcards();
+  const { decks, deckCards, fetchDeckCards, createCard, updateCard, deleteCard } = useFlashcards();
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [editingCard, setEditingCard] = useState<Flashcard | null>(null);
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
+  const [editFront, setEditFront] = useState("");
+  const [editBack, setEditBack] = useState("");
 
   useFocusEffect(
     useCallback(() => {
@@ -47,6 +52,45 @@ export default function DeckDetailScreen() {
     () => decks.find((item) => item.id === deckId),
     [decks, deckId],
   );
+
+  const handleEditCard = useCallback((card: Flashcard) => {
+    setEditingCard(card);
+    setEditFront(card.front);
+    setEditBack(card.back);
+    setEditModalOpen(true);
+  }, []);
+
+  const handleDeleteCard = useCallback((card: Flashcard) => {
+    Alert.alert(
+      "Delete Card",
+      "Are you sure you want to delete this card?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            void deleteCard(card.id);
+          },
+        },
+      ],
+    );
+  }, [deleteCard]);
+
+  const handleSaveEdit = useCallback(() => {
+    if (!editingCard || !editFront.trim() || !editBack.trim()) {
+      return;
+    }
+    void updateCard({
+      id: editingCard.id,
+      front: editFront.trim(),
+      back: editBack.trim(),
+    });
+    setEditModalOpen(false);
+    setEditingCard(null);
+    setEditFront("");
+    setEditBack("");
+  }, [editingCard, editFront, editBack, updateCard]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -83,7 +127,13 @@ export default function DeckDetailScreen() {
         ListEmptyComponent={
           <Text style={styles.empty}>No cards yet. Add your first card.</Text>
         }
-        renderItem={({ item }) => <CardItem card={item} />}
+        renderItem={({ item }) => (
+          <CardItem
+            card={item}
+            onEdit={handleEditCard}
+            onDelete={handleDeleteCard}
+          />
+        )}
       />
 
       <Pressable style={styles.fab} onPress={() => setModalOpen(true)}>
@@ -129,15 +179,42 @@ export default function DeckDetailScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <Modal visible={isEditModalOpen} transparent animationType="slide">
+        <Pressable style={styles.overlay} onPress={() => setEditModalOpen(false)}>
+          <Pressable style={styles.sheet}>
+            <Text style={styles.modalTitle}>Edit Card</Text>
+            <TextInput
+              value={editFront}
+              onChangeText={setEditFront}
+              placeholder="Front"
+              style={[styles.input, styles.multiline]}
+              multiline
+            />
+            <TextInput
+              value={editBack}
+              onChangeText={setEditBack}
+              placeholder="Back"
+              style={[styles.input, styles.multiline]}
+              multiline
+            />
+            <Pressable style={styles.saveButton} onPress={handleSaveEdit}>
+              <Text style={styles.saveLabel}>Save Changes</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 interface CardItemProps {
   card: Flashcard;
+  onEdit: (card: Flashcard) => void;
+  onDelete: (card: Flashcard) => void;
 }
 
-function CardItem({ card }: CardItemProps) {
+function CardItem({ card, onEdit, onDelete }: CardItemProps) {
   const label =
     card.state === 0
       ? "New"
@@ -148,14 +225,18 @@ function CardItem({ card }: CardItemProps) {
           : "Relearning";
 
   return (
-    <View style={styles.cardItem}>
+    <Pressable
+      style={styles.cardItem}
+      onPress={() => onEdit(card)}
+      onLongPress={() => onDelete(card)}
+    >
       <View style={styles.cardTitleWrap}>
         <MarkdownText content={card.front} numberOfLines={2} />
       </View>
       <View style={styles.stateBadge}>
         <Text style={styles.stateText}>{label}</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
