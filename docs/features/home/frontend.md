@@ -86,7 +86,7 @@ const { decks } = useFlashcardStore()
 const { todos } = useTodoStore()
 
 const totalDue = decks.reduce((sum, d) => sum + d.due_count, 0)
-const todayTodos = todos.filter(t => !t.is_completed && isToday(new Date(t.due_date ?? '')))
+const todayTodos = todos.filter(t => !t.is_completed && t.reminder_at && isToday(new Date(t.reminder_at)))
 ```
 
 Fetch both on tab focus using `useFocusEffect` from Expo Router.

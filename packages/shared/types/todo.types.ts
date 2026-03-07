@@ -17,7 +17,6 @@ export interface Todo {
   description: string | null;
   is_completed: boolean;
   priority: Priority;
-  due_date: string | null;
   reminder_at: string | null;
   reminder_sent: boolean;
   recurrence: TodoRecurrence | null;
@@ -29,7 +28,6 @@ export interface CreateTodoPayload {
   title: string;
   description?: string;
   priority?: Priority;
-  due_date?: string;
   reminder_at?: string;
   recurrence?: TodoRecurrence | null;
 }
@@ -40,7 +38,6 @@ export interface UpdateTodoPayload {
   description?: string | null;
   is_completed?: boolean;
   priority?: Priority;
-  due_date?: string | null;
   reminder_at?: string | null;
   recurrence?: TodoRecurrence | null;
 }
@@ -52,7 +49,6 @@ export interface DeleteTodoPayload {
 export interface TodoFilter {
   isCompleted?: boolean;
   priority?: Priority;
-  dueToday?: boolean;
 }
 
 export interface ReminderNotificationPayload {

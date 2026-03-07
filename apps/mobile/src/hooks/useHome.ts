@@ -70,7 +70,7 @@ export function useHome() {
   const totalDue = useMemo(() => decks.reduce((sum, deck) => sum + deck.due_count, 0), [decks]);
   const reviewDecks = useMemo(() => decks.filter((deck) => deck.due_count > 0), [decks]);
   const todayTodos = useMemo(
-    () => todos.filter((todo) => !todo.is_completed && todo.due_date && isToday(new Date(todo.due_date))),
+    () => todos.filter((todo) => !todo.is_completed && todo.reminder_at && isToday(new Date(todo.reminder_at))),
     [todos],
   );
 

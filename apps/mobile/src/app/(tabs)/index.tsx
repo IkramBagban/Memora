@@ -42,7 +42,7 @@ export default function HomeScreen() {
           ) : (
             <>
               <Text style={styles.heroText}>{totalDue} flashcards to review</Text>
-              <Text style={styles.heroText}>{todayTodos.length} todos due today</Text>
+              <Text style={styles.heroText}>{todayTodos.length} reminders today</Text>
             </>
           )}
 
@@ -66,7 +66,7 @@ export default function HomeScreen() {
               {todo.priority === 'high' ? <View style={styles.priorityDot} /> : null}
             </View>
           ))}
-          {todayTodos.length === 0 ? <Text style={styles.emptyText}>No todos due today! 🎉</Text> : null}
+          {todayTodos.length === 0 ? <Text style={styles.emptyText}>No reminders today! 🎉</Text> : null}
         </View>
 
         <View style={styles.section}>

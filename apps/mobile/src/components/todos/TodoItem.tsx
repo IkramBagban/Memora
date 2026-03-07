@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { format, isBefore, isToday, startOfToday } from "date-fns";
+import { format } from "date-fns";
 import {
   Colors,
   Radius,
@@ -47,11 +47,6 @@ export function TodoItem({
   onDelete,
   onPriorityCycle,
 }: TodoItemProps) {
-  const isOverdue = Boolean(
-    todo.due_date &&
-      isBefore(new Date(todo.due_date), startOfToday()) &&
-      !todo.is_completed,
-  );
 
   const nextPriority =
     priorityOrder[
@@ -67,7 +62,6 @@ export function TodoItem({
       style={[
         styles.card,
         todo.is_completed ? styles.cardCompleted : undefined,
-        isOverdue ? styles.overdue : undefined,
         todo.priority === "high" && !todo.is_completed
           ? styles.highPriority
           : undefined,
@@ -121,25 +115,6 @@ export function TodoItem({
         ) : null}
 
         <View style={styles.metaRow}>
-          {todo.due_date ? (
-            <View style={styles.metaItem}>
-              <Ionicons
-                color={isOverdue ? Colors.error : Colors.textSecondary}
-                name="calendar-outline"
-                size={12}
-              />
-              <Text
-                style={[
-                  styles.metaText,
-                  isOverdue ? styles.metaTextOverdue : undefined,
-                ]}
-              >
-                {isToday(new Date(todo.due_date))
-                  ? "Today"
-                  : format(new Date(todo.due_date), "MMM d")}
-              </Text>
-            </View>
-          ) : null}
 
           {todo.reminder_at ? (
             <View style={styles.metaItem}>
@@ -180,10 +155,6 @@ const styles = StyleSheet.create({
   },
   cardCompleted: {
     opacity: 0.7,
-  },
-  overdue: {
-    borderColor: Colors.error,
-    backgroundColor: Colors.surface,
   },
   highPriority: {
     borderLeftWidth: 4,
@@ -233,9 +204,5 @@ const styles = StyleSheet.create({
   },
   metaItem: { alignItems: "center", flexDirection: "row", gap: 4 },
   metaText: { color: Colors.textSecondary, fontSize: Typography.size.sm },
-  metaTextOverdue: {
-    color: Colors.error,
-    fontWeight: Typography.weight.medium,
-  },
   deleteButton: { marginLeft: "auto", padding: Spacing.xs },
 });

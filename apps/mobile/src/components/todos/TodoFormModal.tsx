@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -35,7 +34,6 @@ interface TodoFormModalProps {
     title: string;
     description?: string;
     priority: Priority;
-    due_date?: string | null;
     reminder_at?: string | null;
     recurrence?: TodoRecurrence | null;
   }) => void;
@@ -75,8 +73,6 @@ export function TodoFormModal({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
-  const [dueDate, setDueDate] = useState<Date | null>(null);
-  const [showDuePicker, setShowDuePicker] = useState(false);
   const [showRecurrenceTimePicker, setShowRecurrenceTimePicker] = useState(false);
   const [reminderAt, setReminderAt] = useState<string | null>(null);
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceSelection>("none");
@@ -91,7 +87,6 @@ export function TodoFormModal({
     setTitle(initialTodo?.title ?? "");
     setDescription(initialTodo?.description ?? "");
     setPriority(initialTodo?.priority ?? "medium");
-    setDueDate(initialTodo?.due_date ? new Date(initialTodo.due_date) : null);
     setReminderAt(initialTodo?.reminder_at ?? null);
     setRecurrenceType(initialTodo?.recurrence?.type ?? "none");
     setRecurrenceTimes(initialTodo?.recurrence?.times ?? []);
@@ -101,17 +96,6 @@ export function TodoFormModal({
     setReminderError(null);
   }, [visible, initialTodo]);
 
-  const dueDateLabel = useMemo(
-    () => (dueDate ? format(dueDate, "EEE, d MMM yyyy") : "Pick due date"),
-    [dueDate],
-  );
-
-  const handleDueDateChange = (_event: DateTimePickerEvent, value?: Date) => {
-    setShowDuePicker(false);
-    if (value) {
-      setDueDate(value);
-    }
-  };
 
   const handleSubmit = () => {
     if (!title.trim()) {
@@ -149,7 +133,6 @@ export function TodoFormModal({
       title: title.trim(),
       description: description.trim() || undefined,
       priority,
-      due_date: dueDate ? format(dueDate, "yyyy-MM-dd") : null,
       reminder_at: recurrence ? null : reminderAt,
       recurrence,
     });
@@ -259,54 +242,6 @@ export function TodoFormModal({
                 ))}
               </View>
             </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Due Date</Text>
-              <View style={styles.row}>
-                {Platform.OS === "web" ? (
-                  <View style={[styles.metaButton, { paddingVertical: 0 }]}>
-                    <input
-                      aria-label="Pick due date"
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setDueDate(val ? new Date(val) : null);
-                      }}
-                      style={{
-                        backgroundColor: "transparent",
-                        border: "none",
-                        color: Colors.textPrimary,
-                        flex: 1,
-                        fontFamily: "inherit",
-                        fontSize: Typography.size.md,
-                        outline: "none",
-                        padding: Spacing.sm,
-                        width: "100%",
-                      }}
-                      type="date"
-                      value={dueDate ? format(dueDate, "yyyy-MM-dd") : ""}
-                    />
-                  </View>
-                ) : (
-                  <Pressable
-                    accessibilityLabel="Pick due date"
-                    onPress={() => setShowDuePicker(true)}
-                    style={styles.metaButton}
-                  >
-                    <Text style={styles.metaText}>{dueDateLabel}</Text>
-                  </Pressable>
-                )}
-                {dueDate ? (
-                  <Pressable
-                    accessibilityLabel="Clear due date"
-                    onPress={() => setDueDate(null)}
-                    style={styles.clearButton}
-                  >
-                    <Text style={styles.clearButtonText}>Clear</Text>
-                  </Pressable>
-                ) : null}
-              </View>
-            </View>
-
             <View style={styles.field}>
               <ReminderPicker
                 onChange={({ reminderAt: nextReminder }) => {
@@ -457,13 +392,6 @@ export function TodoFormModal({
             </Pressable>
           </ScrollView>
 
-          {showDuePicker ? (
-            <DateTimePicker
-              mode="date"
-              onChange={handleDueDateChange}
-              value={dueDate ?? new Date()}
-            />
-          ) : null}
           {showRecurrenceTimePicker ? (
             <DateTimePicker
               mode="time"

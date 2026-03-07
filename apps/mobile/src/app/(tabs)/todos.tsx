@@ -258,7 +258,6 @@ export default function TodosScreen() {
             title: payload.title,
             description: payload.description,
             priority: payload.priority,
-            due_date: payload.due_date ?? undefined,
             reminder_at: payload.reminder_at ?? undefined,
             recurrence: payload.recurrence ?? undefined,
           });

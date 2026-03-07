@@ -252,7 +252,6 @@ Request body:
   title: string                          // required, 1-200 chars
   description?: string                   // optional, max 2000 chars
   priority?: 'low' | 'medium' | 'high'  // default 'medium'
-  due_date?: string                      // ISO date string 'YYYY-MM-DD'
   reminder_at?: string                   // ISO datetime string
   reminder_channel?: 'push' | 'email' | 'both'  // default 'push'
   recurrence?: {
@@ -273,7 +272,6 @@ Response `data`:
   description: string | null
   is_completed: boolean
   priority: 'low' | 'medium' | 'high'
-  due_date: string | null
   reminder_at: string | null
   reminder_channel: string | null
   reminder_sent: boolean
@@ -301,7 +299,6 @@ Request body:
   description?: string
   is_completed?: boolean
   priority?: 'low' | 'medium' | 'high'
-  due_date?: string | null
   reminder_at?: string | null
   reminder_channel?: 'push' | 'email' | 'both' | null
   recurrence?: {
@@ -338,7 +335,6 @@ Query params:
 ```
 ?is_completed=false     // filter by completion (default: false = show active)
 ?priority=high          // optional filter
-?due_today=true         // optional — only return todos due today
 ```
 
 Response `data`:
@@ -349,7 +345,6 @@ Array<{
   description: string | null
   is_completed: boolean
   priority: 'low' | 'medium' | 'high'
-  due_date: string | null
   reminder_at: string | null
   recurrence: {
     type: 'daily' | 'weekly'

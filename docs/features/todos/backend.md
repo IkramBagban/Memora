@@ -20,7 +20,6 @@ export const CreateTodoSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
   description: z.string().max(2000).optional(),
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
-  due_date: z.string().date().optional(),  // 'YYYY-MM-DD' format
   reminder_at: z.string().datetime({ offset: true }).optional(),
 }).refine(
   (data) => {
@@ -39,14 +38,12 @@ export const UpdateTodoSchema = z.object({
   description: z.string().max(2000).optional().nullable(),
   is_completed: z.boolean().optional(),
   priority: z.enum(['low', 'medium', 'high']).optional(),
-  due_date: z.string().date().optional().nullable(),
   reminder_at: z.string().datetime({ offset: true }).optional().nullable(),
 })
 
 export const GetTodosQuerySchema = z.object({
   is_completed: z.enum(['true', 'false']).optional().transform(v => v === 'true'),
   priority: z.enum(['low', 'medium', 'high']).optional(),
-  due_today: z.enum(['true', 'false']).optional().transform(v => v === 'true'),
 })
 
 export const DeleteTodoSchema = z.object({
@@ -184,10 +181,6 @@ Deno.serve(async (req) => {
     }
     if (query.priority) {
       dbQuery = dbQuery.eq('priority', query.priority)
-    }
-    if (query.due_today) {
-      const today = new Date().toISOString().split('T')[0]
-      dbQuery = dbQuery.eq('due_date', today)
     }
 
     const { data: todos, error: dbError } = await dbQuery

@@ -36,7 +36,6 @@ export const CreateTodoSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2000).optional(),
   priority: PrioritySchema.optional().default('medium'),
-  due_date: z.string().date().optional(),
   reminder_at: z.string().datetime().optional(),
   recurrence: TodoRecurrenceSchema.nullable().optional(),
 });
@@ -48,7 +47,6 @@ export const UpdateTodoSchema = z
     description: z.string().trim().max(2000).nullable().optional(),
     is_completed: z.boolean().optional(),
     priority: PrioritySchema.optional(),
-    due_date: z.string().date().nullable().optional(),
     reminder_at: z.string().datetime().nullable().optional(),
     recurrence: TodoRecurrenceSchema.nullable().optional(),
   })
@@ -63,9 +61,6 @@ export const GetTodosQuerySchema = z.object({
     .union([z.boolean(), z.string().toLowerCase().transform((value) => value === 'true')])
     .optional(),
   priority: PrioritySchema.optional(),
-  due_today: z
-    .union([z.boolean(), z.string().toLowerCase().transform((value) => value === 'true')])
-    .optional(),
 });
 
 export const SendNotificationSchema = z.object({

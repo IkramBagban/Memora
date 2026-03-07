@@ -46,9 +46,6 @@ const toQueryParams = (filter?: TodoFilter): string => {
   if (filter.priority) {
     params.set('priority', filter.priority);
   }
-  if (filter.dueToday) {
-    params.set('due_today', 'true');
-  }
 
   const query = params.toString();
   return query ? `?${query}` : '';
@@ -59,7 +56,6 @@ export const todoService = {
     GetTodosQuerySchema.parse({
       is_completed: filter?.isCompleted,
       priority: filter?.priority,
-      due_today: filter?.dueToday,
     });
 
     const { data, error } = await invokeSupabaseFunction(`get-todos${toQueryParams(filter)}`);
