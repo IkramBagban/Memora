@@ -21,12 +21,6 @@ interface TodoItemProps {
 
 const priorityOrder: Priority[] = ["low", "medium", "high"];
 
-const priorityColorMap: Record<Priority, string> = {
-  low: Colors.priorityLow,
-  medium: Colors.priorityMedium,
-  high: Colors.priorityHigh,
-};
-
 const recurrenceLabel = (todo: Todo): string | null => {
   if (!todo.recurrence) {
     return null;
@@ -58,6 +52,8 @@ export function TodoItem({
       (priorityOrder.indexOf(todo.priority) + 1) % priorityOrder.length
     ];
   const recurrence = recurrenceLabel(todo);
+
+  const priorityLabel = `${todo.priority.charAt(0).toUpperCase()}${todo.priority.slice(1)} priority`;
 
   return (
     <Pressable
@@ -99,11 +95,11 @@ export function TodoItem({
           <View
             style={[
               styles.priorityBadge,
-              { backgroundColor: priorityColorMap[todo.priority] },
+              { backgroundColor: Colors.primaryLight },
             ]}
           >
             <Text style={styles.priorityText}>
-              {todo.priority.toUpperCase()}
+              {priorityLabel}
             </Text>
           </View>
         </View>
@@ -159,7 +155,7 @@ export function TodoItem({
             onPress={() => onDelete(todo.id)}
             style={styles.deleteButton}
           >
-            <Ionicons color={Colors.error} name="trash-outline" size={16} />
+            <Ionicons color={Colors.textSecondary} name="trash-outline" size={16} />
           </Pressable>
         </View>
       </View>
@@ -186,8 +182,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
   },
   highPriority: {
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.priorityHigh,
+    borderColor: Colors.priorityHigh,
   },
   checkbox: {
     justifyContent: "center",
@@ -211,7 +206,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   priorityText: {
-    color: Colors.textInverse,
+    color: Colors.textPrimary,
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
   },

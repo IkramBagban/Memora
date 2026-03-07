@@ -15,8 +15,18 @@ interface DeckCardProps {
 }
 
 export function DeckCard({ deck, onPress, onLongPress }: DeckCardProps) {
+  const dueLabel =
+    deck.due_count > 0
+      ? `${deck.due_count} ${deck.due_count === 1 ? "card" : "cards"} due today`
+      : "No cards due today";
+
   return (
-    <Pressable style={styles.card} onPress={onPress} onLongPress={onLongPress}>
+    <Pressable
+      accessibilityLabel={`Open deck ${deck.title}`}
+      onLongPress={onLongPress}
+      onPress={onPress}
+      style={styles.card}
+    >
       <View style={styles.content}>
         <View style={styles.row}>
           <Text style={styles.title}>{deck.title}</Text>
@@ -35,6 +45,7 @@ export function DeckCard({ deck, onPress, onLongPress }: DeckCardProps) {
             {deck.description}
           </Text>
         ) : null}
+        <Text style={styles.dueMeta}>{dueLabel}</Text>
         <View style={styles.footerRow}>
           <Text style={styles.meta}>
             {deck.card_count} {deck.card_count === 1 ? "card" : "cards"}
@@ -84,6 +95,12 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: Typography.size.md,
     lineHeight: Typography.size.md * 1.5,
+  },
+  dueMeta: {
+    color: Colors.primaryDark,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.medium,
+    marginTop: Spacing.sm,
   },
   footerRow: {
     marginTop: Spacing.md,

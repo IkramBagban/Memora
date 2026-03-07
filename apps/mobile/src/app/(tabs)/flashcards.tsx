@@ -35,7 +35,7 @@ export default function FlashcardsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchDecks();
+      void fetchDecks();
     }, [fetchDecks]),
   );
 
@@ -43,26 +43,51 @@ export default function FlashcardsScreen() {
     () => decks.reduce((sum, deck) => sum + deck.due_count, 0),
     [decks],
   );
+  const deckCount = decks.length;
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Flashcards</Text>
-        <Pressable style={styles.addButton} onPress={() => setModalOpen(true)}>
+        <View>
+          <Text style={styles.title}>Flashcards</Text>
+          <Text style={styles.subtitle}>
+            {deckCount} {deckCount === 1 ? "deck" : "decks"} · {dueCount} due today
+          </Text>
+        </View>
+        <Pressable
+          accessibilityLabel="Create deck"
+          onPress={() => setModalOpen(true)}
+          style={styles.addButton}
+        >
           <Ionicons name="add" size={24} color={Colors.primaryDark} />
         </Pressable>
       </View>
 
       {dueCount > 0 ? (
-        <View style={styles.banner}>
+        <Pressable
+          accessibilityLabel="Start flashcard review"
+          onPress={() => router.push("/flashcards/review")}
+          style={styles.banner}
+        >
+          <Ionicons color={Colors.primaryDark} name="sparkles-outline" size={16} />
           <Text style={styles.bannerText}>{dueCount} cards due today</Text>
-        </View>
+          <Ionicons color={Colors.primaryDark} name="arrow-forward" size={16} />
+        </Pressable>
       ) : null}
 
       <FlatList
         data={decks}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.content}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Ionicons color={Colors.textSecondary} name="albums-outline" size={48} />
+            <Text style={styles.emptyTitle}>No decks yet</Text>
+            <Text style={styles.emptyDescription}>
+              Create your first deck to start reviewing with spaced repetition.
+            </Text>
+          </View>
+        }
         renderItem={({ item }) => (
           <DeckCard
             deck={item}
@@ -81,7 +106,7 @@ export default function FlashcardsScreen() {
         )}
       />
 
-      <Pressable style={styles.fab} onPress={() => setModalOpen(true)}>
+      <Pressable accessibilityLabel="Create deck" style={styles.fab} onPress={() => setModalOpen(true)}>
         <Ionicons name="add" size={28} color={Colors.white} />
       </Pressable>
 
@@ -151,15 +176,24 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.bold,
   },
+  subtitle: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    marginTop: Spacing.xs,
+  },
   addButton: {
     padding: Spacing.xs,
     borderRadius: Radius.full,
     backgroundColor: Colors.primaryLight,
   },
   banner: {
-    marginHorizontal: Spacing.md,
+    alignItems: "center",
     backgroundColor: Colors.primaryLight,
     borderRadius: Radius.full,
+    flexDirection: "row",
+    gap: Spacing.xs,
+    justifyContent: "center",
+    marginHorizontal: Spacing.md,
     padding: Spacing.sm,
   },
   bannerText: {
@@ -172,6 +206,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.xxl * 2 + Spacing.xl,
     paddingTop: Spacing.sm,
+  },
+  emptyState: {
+    alignItems: "center",
+    marginTop: Spacing.xxl,
+    paddingHorizontal: Spacing.xxl,
+  },
+  emptyTitle: {
+    color: Colors.textPrimary,
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.semibold,
+    marginTop: Spacing.md,
+  },
+  emptyDescription: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.md,
+    marginTop: Spacing.xs,
+    textAlign: "center",
   },
   fab: {
     position: "absolute",

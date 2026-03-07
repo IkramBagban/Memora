@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -60,6 +61,14 @@ export default function TodosScreen() {
   );
 
   const groupedTodos = getGroupedTodos();
+
+  const summary = useMemo(() => ({
+    totalActive:
+      groupedTodos.overdue.length + groupedTodos.today.length + groupedTodos.upcoming.length,
+    overdue: groupedTodos.overdue.length,
+    dueToday: groupedTodos.today.length,
+    completed: groupedTodos.completed.length,
+  }), [groupedTodos]);
 
   const rows = useMemo<SectionRow[]>(() => {
     const nextRows: SectionRow[] = [];
@@ -143,7 +152,23 @@ export default function TodosScreen() {
         </Pressable>
       </View>
 
-      <View style={styles.filtersRow}>
+      <View style={styles.summaryCard}>
+        <View style={styles.summaryHeader}>
+          <Text style={styles.summaryTitle}>Focus today</Text>
+          <Text style={styles.summaryValue}>{summary.totalActive}</Text>
+        </View>
+        <View style={styles.summaryMetaRow}>
+          <Text style={styles.summaryMeta}>Overdue: {summary.overdue}</Text>
+          <Text style={styles.summaryMeta}>Today: {summary.dueToday}</Text>
+          <Text style={styles.summaryMeta}>Done: {summary.completed}</Text>
+        </View>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.filtersRow}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+      >
         {filters.map((entry) => (
           <Pressable
             accessibilityLabel={`Filter by ${entry.label}`}
@@ -164,7 +189,7 @@ export default function TodosScreen() {
             </Text>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
 
       {isLoading ? (
         <View style={styles.loaderWrap}>
@@ -287,6 +312,40 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryLight,
     borderRadius: Radius.full,
     padding: Spacing.xs,
+  },
+  summaryCard: {
+    backgroundColor: Colors.surface,
+    borderColor: Colors.border,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.md,
+    padding: Spacing.md,
+    ...Shadow.sm,
+  },
+  summaryHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  summaryTitle: {
+    color: Colors.textPrimary,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semibold,
+  },
+  summaryValue: {
+    color: Colors.primaryDark,
+    fontSize: Typography.size.xxl,
+    fontWeight: Typography.weight.bold,
+  },
+  summaryMetaRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  summaryMeta: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
   },
   filtersRow: {
     flexDirection: "row",
