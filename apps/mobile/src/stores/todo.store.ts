@@ -1,6 +1,6 @@
 import { Alert } from 'react-native';
 import { create } from 'zustand';
-import { isBefore, isToday, startOfDay } from 'date-fns';
+import { isToday } from 'date-fns';
 import type { CreateTodoPayload, Todo, UpdateTodoPayload } from '@memora/shared';
 import {
   cancelReminderNotifications,
@@ -34,12 +34,6 @@ interface TodoStore {
   getGroupedTodos: () => GroupedTodos;
 }
 
-const sortByDueDate = (a: Todo, b: Todo): number => {
-  if (!a.due_date && !b.due_date) return 0;
-  if (!a.due_date) return 1;
-  if (!b.due_date) return -1;
-  return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-};
 
 const weekdayByIndex: ('sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat')[] = [
   'sun',
@@ -272,39 +266,19 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       }
 
       if (filter === 'today') {
-        const dueToday = todo.due_date ? isToday(new Date(todo.due_date)) : false;
         const reminderToday = todo.reminder_at ? isToday(new Date(todo.reminder_at)) : false;
-        return dueToday || reminderToday || isRecurringToday(todo);
+        return reminderToday || isRecurringToday(todo);
       }
 
       return true;
     });
 
-    const todayStart = startOfDay(new Date());
-
     return {
-      overdue: filteredTodos
-        .filter((todo) => todo.due_date && isBefore(new Date(todo.due_date), todayStart))
-        .sort(sortByDueDate),
+      overdue: [],
       today: filteredTodos
-        .filter(
-          (todo) =>
-            (todo.due_date && isToday(new Date(todo.due_date))) ||
-            (todo.reminder_at && isToday(new Date(todo.reminder_at))) ||
-            isRecurringToday(todo),
-        )
-        .sort(sortByDueDate),
+        .filter((todo) => (todo.reminder_at && isToday(new Date(todo.reminder_at))) || isRecurringToday(todo)),
       upcoming: filteredTodos
-        .filter(
-          (todo) =>
-            !(
-              (todo.due_date && isToday(new Date(todo.due_date))) ||
-              (todo.reminder_at && isToday(new Date(todo.reminder_at))) ||
-              isRecurringToday(todo)
-            ) &&
-            (!todo.due_date || (!isToday(new Date(todo.due_date)) && new Date(todo.due_date) > todayStart)),
-        )
-        .sort(sortByDueDate),
+        .filter((todo) => !(todo.reminder_at && isToday(new Date(todo.reminder_at))) && !isRecurringToday(todo)),
       completed: [],
     };
   },

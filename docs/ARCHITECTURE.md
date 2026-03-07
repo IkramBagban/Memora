@@ -95,7 +95,6 @@ CREATE TABLE todos (
   reminder_sent BOOLEAN DEFAULT FALSE,
   -- Recurrence (future)
   recurrence TEXT,                   -- null for one-time
-  due_date DATE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

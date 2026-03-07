@@ -50,10 +50,6 @@ Deno.serve(async (req: Request) => {
     if (query.priority) {
       dbQuery = dbQuery.eq('priority', query.priority);
     }
-    if (query.due_today) {
-      const today = new Date().toISOString().split('T')[0];
-      dbQuery = dbQuery.eq('due_date', today);
-    }
 
     const { data: todos, error: dbError } = await dbQuery;
 

@@ -21,7 +21,7 @@ Header: "Todos"  [+ button top right]
 ─────────────────────
 Filter tabs: All | Today | High Priority | Done
 ─────────────────────
-Section: "Overdue" (red badge count) — if any overdue [active tabs only]
+Section: "Today" (badge count) — if any reminders today [active tabs only]
   TodoItem ...
 Section: "Today"
   TodoItem ...
@@ -33,8 +33,8 @@ FAB: green + → opens CreateTodoModal
 ```
 
 **Filter tabs behavior:**
-- "All" — show all incomplete todos, grouped by overdue/today/upcoming
-- "Today" — only incomplete todos with due_date = today OR reminder_at = today
+- "All" — show all incomplete todos, grouped by today/upcoming
+- "Today" — only incomplete todos with reminder_at = today
 - "High Priority" — only high priority incomplete todos
 - "Done" — show completed todos, sorted by most recently completed first
 
@@ -92,9 +92,6 @@ Description
 Priority
 [Segmented control: Low | Medium | High]  ← use 3 rounded buttons
 
-Due Date
-[Tap to pick → DateTimePicker] or [Clear]
-
 Reminder
 [Toggle switch]
 [If ON, show:]
@@ -143,7 +140,6 @@ export const todoService = {
     const params = new URLSearchParams()
     if (filter?.isCompleted !== undefined) params.append('is_completed', String(filter.isCompleted))
     if (filter?.priority) params.append('priority', filter.priority)
-    if (filter?.dueToday) params.append('due_today', 'true')
 
     const { data } = await supabase.functions.invoke(`get-todos?${params}`)
     if (!data.success) throw new Error(data.error.message)
@@ -228,17 +224,14 @@ interface TodoStore {
 **Derived state (computed in selectors, not stored):**
 ```ts
 // Use these functions in components
-export const getOverdueTodos = (todos: Todo[]) =>
-  todos.filter(t => !t.is_completed && t.due_date && new Date(t.due_date) < startOfToday())
-
 export const getTodayTodos = (todos: Todo[]) =>
-  todos.filter(t => !t.is_completed && t.due_date && isToday(new Date(t.due_date)))
+  todos.filter(t => !t.is_completed && t.reminder_at && isToday(new Date(t.reminder_at)))
 
 export const getUpcomingTodos = (todos: Todo[]) =>
-  todos.filter(t => !t.is_completed && t.due_date && new Date(t.due_date) > endOfToday())
+  todos.filter(t => !t.is_completed && t.reminder_at && new Date(t.reminder_at) > endOfToday())
 
-export const getNoDueDateTodos = (todos: Todo[]) =>
-  todos.filter(t => !t.is_completed && !t.due_date)
+export const getNoReminderTodos = (todos: Todo[]) =>
+  todos.filter(t => !t.is_completed && !t.reminder_at)
 ```
 
 Use `date-fns` for date comparisons.
