@@ -400,3 +400,118 @@ Response `data`:
   reviewed_cards_today: number    // flashcards reviewed today
 }
 ```
+
+---
+
+## DNS
+
+> DNS management is provider-aware and currently supports **Namecheap first** and **Cloudflare second**. All endpoints require auth and accept a `provider` field to select the integration.
+
+### `dns-list-records`
+**POST**
+
+Request body:
+```ts
+{
+  provider: 'namecheap' | 'cloudflare'
+  domain: string
+}
+```
+
+Response `data`:
+```ts
+{
+  provider: 'namecheap' | 'cloudflare'
+  domain: string
+  count: number
+  records: Array<{
+    id: string
+    name: string
+    type: 'A' | 'AAAA' | 'CNAME' | 'MX' | 'TXT' | 'NS' | 'SRV' | 'CAA'
+    value: string
+    ttl: number
+    proxied?: boolean
+    priority?: number
+  }>
+}
+```
+
+### `dns-create-record`
+**POST**
+
+Request body:
+```ts
+{
+  provider: 'namecheap' | 'cloudflare'
+  domain: string
+  record: {
+    name: string
+    type: 'A' | 'AAAA' | 'CNAME' | 'MX' | 'TXT' | 'NS' | 'SRV' | 'CAA'
+    value: string
+    ttl: number
+    proxied?: boolean
+    priority?: number
+  }
+}
+```
+
+Response `data`:
+```ts
+{
+  provider: 'namecheap' | 'cloudflare'
+  domain: string
+  record: {
+    id: string
+    name: string
+    type: 'A' | 'AAAA' | 'CNAME' | 'MX' | 'TXT' | 'NS' | 'SRV' | 'CAA'
+    value: string
+    ttl: number
+    proxied?: boolean
+    priority?: number
+  }
+}
+```
+
+### `dns-update-record`
+**POST**
+
+Request body:
+```ts
+{
+  provider: 'namecheap' | 'cloudflare'
+  domain: string
+  recordId: string
+  patch: {
+    name?: string
+    type?: 'A' | 'AAAA' | 'CNAME' | 'MX' | 'TXT' | 'NS' | 'SRV' | 'CAA'
+    value?: string
+    ttl?: number
+    proxied?: boolean
+    priority?: number
+  }
+}
+```
+
+Response `data`: same shape as `dns-create-record` response.
+
+### `dns-delete-record`
+**POST**
+
+Request body:
+```ts
+{
+  provider: 'namecheap' | 'cloudflare'
+  domain: string
+  recordId: string
+}
+```
+
+Response `data`:
+```ts
+{
+  provider: 'namecheap' | 'cloudflare'
+  domain: string
+  recordId: string
+  deleted: true
+}
+```
