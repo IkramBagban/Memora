@@ -68,9 +68,6 @@ export function TodoItem({
         styles.card,
         todo.is_completed ? styles.cardCompleted : undefined,
         isOverdue ? styles.overdue : undefined,
-        todo.priority === "high" && !todo.is_completed
-          ? styles.highPriority
-          : undefined,
       ]}
     >
       <Pressable
@@ -184,10 +181,6 @@ const styles = StyleSheet.create({
   overdue: {
     borderColor: Colors.error,
     backgroundColor: Colors.surface,
-  },
-  highPriority: {
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.priorityHigh,
   },
   checkbox: {
     justifyContent: "center",

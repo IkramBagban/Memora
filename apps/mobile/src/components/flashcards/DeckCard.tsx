@@ -39,7 +39,6 @@ export function DeckCard({ deck, onPress, onLongPress }: DeckCardProps) {
           <Text style={styles.meta}>
             {deck.card_count} {deck.card_count === 1 ? "card" : "cards"}
           </Text>
-          <View style={[styles.colorDot, { backgroundColor: deck.color }]} />
         </View>
       </View>
     </Pressable>
@@ -88,17 +87,12 @@ const styles = StyleSheet.create({
   footerRow: {
     marginTop: Spacing.md,
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     alignItems: "center",
   },
   meta: {
     color: Colors.textSecondary,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.medium,
-  },
-  colorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: Radius.full,
   },
 });
